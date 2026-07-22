@@ -8,9 +8,6 @@ Route::get('/', function () {
 });
 
 
-Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
+Route::resource('countries', CountryController::class);
 
-Route::get('/countries/create', [CountryController::class, 'create'])->name('countries.create');
-
-Route::post('/countries', [CountryController::class, 'store'])->name('countries.store');
 

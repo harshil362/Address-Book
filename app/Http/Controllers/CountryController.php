@@ -12,8 +12,11 @@ class CountryController extends Controller
      */
     public function index()
     {
-            //return "Country List";
-                return view('countries.index');
+        //return "Country List";
+
+        $countries = Country::all();
+
+        return view('countries.index', compact('countries'));
     }
 
     /**
@@ -22,6 +25,7 @@ class CountryController extends Controller
     public function create()
     {
         //
+        return view('countries.create');
     }
 
     /**
@@ -29,38 +33,62 @@ class CountryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'country' => 'required|unique:countries,country',
+            'country_code' => 'required|unique:countries,country_code',
+        ]);
+
+        Country::create([
+            'country' => $request->country,
+            'country_code' => $request->country_code,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('countries.index');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Country $country)
-    {
-        //
-    }
+    public function show(Country $country) {}
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Country $country)
+    public function edit(string $id)
     {
-        //
+        $country = Country::find($id);
+
+        return view('countries.edit', compact('country'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Country $country)
+    public function update(Request $request, string $id)
     {
-        //
+
+
+        $country = Country::find($id);
+
+        $country->update([
+            'country' => $request->country,
+            'country_code' => $request->country_code,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('countries.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Country $country)
+    public function destroy(string $id)
     {
-        //
+        $country = Country::find($id);
+
+        $country->delete();
+
+        return redirect()->route('countries.index');
     }
 }
