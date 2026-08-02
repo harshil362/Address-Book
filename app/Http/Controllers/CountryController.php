@@ -35,16 +35,19 @@ class CountryController extends Controller
     {
         $request->validate([
             'country' => 'required|unique:countries,country',
-            'country_code' => 'required|unique:countries,country_code',
+            'country_code' => 'required|numeric|digits:6|unique:countries,country_code',
         ]);
 
         Country::create([
             'country' => $request->country,
             'country_code' => $request->country_code,
-            'status' => $request->status,
+            //'status' => $request->status,
         ]);
 
-        return redirect()->route('countries.index');
+        //return redirect()->route('countries.index');
+        return redirect()
+        ->route('countries.index')
+        ->with('success', 'countries created successfully.');
     }
 
     /**
@@ -67,17 +70,34 @@ class CountryController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        
+       $request->validate([
+        'country' => 'required',
+        'country_code' => 'required|numeric|digits:6',
+    ]);
 
+    $country = Country::find($id);
 
-        $country = Country::find($id);
+    $country->update([
+        'country' => $request->country,
+        'country_code' => $request->country_code,
+        'status' => $request->input('status', $country->status), 
+    ]);
+    
 
-        $country->update([
-            'country' => $request->country,
-            'country_code' => $request->country_code,
-            'status' => $request->status,
-        ]);
+    // $statusMsg = $request->input('status', $country->status) == 1 
+    //     ? 'Country status active successfully.' 
+    //     : 'Country status inactive successfully.';
 
-        return redirect()->route('countries.index');
+    if ($request->action == 'status') {
+    $message = $request->status == 1
+        ? 'Country status active successfully.'
+        : 'Country status inactive successfully.';
+} else {
+    $message = 'Country updated successfully.';
+}
+
+    return redirect()->route('countries.index')->with('success', $message);
     }
 
     /**
@@ -89,6 +109,6 @@ class CountryController extends Controller
 
         $country->delete();
 
-        return redirect()->route('countries.index');
+        return redirect()->route('countries.index')->with('success', 'Country deleted successfully.');
     }
 }

@@ -45,8 +45,12 @@
                                 <input
                                     type="text"
                                     name="country"
-                                    class="form-control"
+                                    class="form-control @error('country') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
+                                    value="{{ old('country') }}"
                                     placeholder="Enter Country Name">
+                                @error('country')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="mb-3">
@@ -54,22 +58,21 @@
                                 <input
                                     type="text"
                                     name="country_code"
-                                    class="form-control"
+                                    class="form-control @error('country_code') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
+                                    value="{{ old('country_code') }}"
                                     placeholder="Enter Country Code">
+                                @error('country_code')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-select">
-                                    <option value="1">Active</option>
-                                    <option value="0">Inactive</option>
-                                </select>
-                            </div>
-
-                            <div class="d-grid">
+                            <div class="d-flex justify-content-start gap-2 mt-3">
                                 <button type="submit" class="btn btn-primary">
                                     Save
                                 </button>
+                                <a href="{{ route('countries.index') }}" class="btn btn-secondary">
+                                    Back
+                                </a>
                             </div>
 
                         </form>

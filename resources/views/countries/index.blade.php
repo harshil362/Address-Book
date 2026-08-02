@@ -9,71 +9,84 @@
 </head>
 
 <body>
+    @include('layouts.navbar')
 
-<div class="container mt-5">
+    <div class="container mt-5">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Country List</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Country List</h2>
 
-        <a href="{{ route('countries.create') }}" class="btn btn-primary">
-            Add Country
-        </a>
-    </div>
+            <a href="{{ route('countries.create') }}" class="btn btn-primary">
+                Add Country
+            </a>
+        </div>
 
-    <table class="table table-bordered table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Country</th>
-                <th>Country Code</th>
-                <th>Status</th>
-                <th width="180">Action</th>
-            </tr>
-        </thead>
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Country</th>
+                    <th>Country Code</th>
+                    <th>Status</th>
+                    <th width="180">Action</th>
+                </tr>
+            </thead>
 
-        <tbody>
-            @foreach($countries as $country)
-            <tr>
-                <td>{{ $country->id }}</td>
-                <td>{{ $country->country }}</td>
-                <td>{{ $country->country_code }}</td>
+            <tbody>
+                @foreach($countries as $country)
+                <tr>
+                    <td>{{ $country->id }}</td>
+                    <td>{{ $country->country }}</td>
+                    <td>{{ $country->country_code }}</td>
 
-                <td>
-                    @if($country->status == 1)
-                        <span class="badge bg-success">Active</span>
-                    @else
-                        <span class="badge bg-danger">Inactive</span>
-                    @endif
-                </td>
+                    <td>
+                        <form action="{{ route('countries.update', $country->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="country" value="{{ $country->country }}">
+                            <input type="hidden" name="country_code" value="{{ $country->country_code }}">
+                             <input type="hidden" name="status" value="{{ $country->status ? 0 : 1 }}">
+                            <input type="hidden" name="action" value="status">
 
-                <td>
-                    <a href="{{ route('countries.edit', $country->id) }}"
-                       class="btn btn-warning btn-sm">
-                        Edit
-                    </a>
+                            <div class="form-check form-switch">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    onchange="this.form.submit()"
+                                    {{ $country->status ? 'checked' : '' }}>
+                            </div>
+                        </form>
+                    </td>
 
-                    <form action="{{ route('countries.destroy', $country->id) }}"
-                          method="POST"
-                          class="d-inline">
+                    <td>
+                        <a href="{{ route('countries.edit', $country->id) }}"
+                            class="btn btn-warning btn-sm">
+                            Edit
+                        </a>
 
-                        @csrf
-                        @method('DELETE')
+                        <form action="{{ route('countries.destroy', $country->id) }}"
+                            method="POST"
+                            class="d-inline">
 
-                        <button type="submit"
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit"
                                 class="btn btn-danger btn-sm"
                                 onclick="return confirm('Are you sure you want to delete this country?')">
-                            Delete
-                        </button>
-                    </form>
+                                Delete
+                            </button>
+                        </form>
 
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
 
-    </table>
+        </table>
 
-</div>
+    </div>
 
 </body>
 

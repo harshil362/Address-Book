@@ -18,31 +18,31 @@ return new class extends Migration
 
             $table->string('name');
 
-            $table->string('mobile');
+            $table->string('mobile_no', 10);
 
-            $table->string('alternate_mobile')->nullable();
+            $table->string('alternate_mobile', 10)->nullable();
 
             $table->string('email')->nullable();
 
-            $table->foreignId('country_id')->constrained()->onDelete('cascade');
+            $table->foreignId('country_id')->constrained()->cascadeOnDelete();
 
-            $table->foreignId('state_id')->constrained()->onDelete('cascade');
+            $table->foreignId('state_id')->constrained()->cascadeOnDelete();
 
-            $table->foreignId('city_id')->constrained()->onDelete('cascade');
+            $table->foreignId('city_id')->constrained()->cascadeOnDelete();
 
-            $table->foreignId('area_id')->constrained()->onDelete('cascade');
+            $table->foreignId('area_id')->constrained()->cascadeOnDelete();
 
-            $table->text('address1');
+            $table->string('address_line_1');
 
-            $table->text('address2')->nullable();
+            $table->string('address_line_2')->nullable();
 
             $table->string('landmark')->nullable();
 
             $table->string('pincode');
 
-            $table->boolean('is_default')->default(false);
+            $table->boolean('is_default_address')->default(0);
 
-            $table->boolean('status')->default(true);
+            $table->boolean('status')->default(1);
 
             $table->timestamps();
         });

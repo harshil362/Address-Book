@@ -18,8 +18,9 @@ return new class extends Migration
 
             $table->string('city');
 
+            $table->string('city_code');
+
             $table->boolean('status')->default(true);
-            
             $table->timestamps();
         });
     }

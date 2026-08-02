@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\City;
+use App\Models\State;
+use App\Models\Country;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CityController extends Controller
 {
@@ -12,15 +15,45 @@ class CityController extends Controller
      */
     public function index()
     {
-        //
+        $cities = City::with('state')->get();
+
+        return view('cities.index', compact('cities'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        //filter 
+        // $countries = Country::where('status', 1)->get();
+
+        // $states = collect();
+        // $countryId = old('country_id', $request->country_id);
+
+        // if ($countryId) {
+        //     $states = State::where('country_id', $countryId)
+        //         ->where('status', 1)
+        //         ->whereHas('country', function ($q) {
+        //             $q->where('status', 1);
+        //         })
+        //         ->get();
+        // }
+
+        // return view('cities.create', compact('countries', 'states'));
+
+        $countries = Country::where('status', 1)->get();
+
+        $states = collect();
+        $countryId = old('country_id', $request->country_id);
+
+        if ($countryId) {
+            $states = State::where('country_id', $countryId)
+                ->where('status', 1)
+                ->get();
+        }
+
+        return view('cities.create', compact('countries', 'states'));
     }
 
     /**
@@ -28,7 +61,41 @@ class CityController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'country_id' => [
+                'required',
+                //Rule::exists('countries', 'id')->where('status', 1),
+                //              function ($attribute, $value, $fail) {
+                //     if (!Country::where('id', $value)
+                //         ->where('status', 1)
+                //         ->exists()) {
+
+                //         $fail('The selected country is invalid or inactive.');
+                //     }
+                // },
+
+            ],
+            'state_id' => [
+                'required',
+                //         Rule::exists('states', 'id')
+                //             ->where('status', 1)
+                //             ->where('country_id', $request->country_id),
+            ],
+            'city' => 'required|unique:cities,city',
+            //  'city_code' => 'required|unique:cities,city_code|digits:6',
+            'city_code' => 'required|numeric|digits:6|unique:cities,city_code',
+            //'status' => 'required',
+        ]);
+
+        City::create([
+            'state_id' => $request->state_id,
+            'city' => $request->city,
+            'city_code' => $request->city_code,
+            'status' => 1
+        ]);
+
+        return redirect()->route('cities.index')
+            ->with('success', 'City added successfully.');
     }
 
     /**
@@ -42,24 +109,77 @@ class CityController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(City $city)
+    public function edit(string $id, Request $request,)
     {
-        //
+        $city = City::findOrFail($id);
+
+        $countries = Country::where('status', 1)->get();
+
+        if ($request->filled('country_id')) {
+            $countryId = $request->country_id;
+        } else {
+            $countryId = $city->state->country_id;
+        }
+
+        $states = State::where('country_id', $countryId)
+            ->where('status', 1)
+            ->get();
+
+        return view('cities.edit', compact('city', 'countries', 'states', 'countryId'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, City $city)
+    public function update(Request $request, string $id)
     {
-        //
-    }
+        $request->validate([
+            'country_id' => [
+                'required',
+                Rule::exists('countries', 'id'),
+            ],
+            'state_id'   => [
+                'required',
+                Rule::exists('states', 'id')
+                    ->where('country_id', $request->country_id),
+            ],
+            'city'       => 'required|unique:cities,city,' . $id,
+            'city_code'  => 'required|numeric|digits:6|unique:cities,city_code,' . $id,
+        ]);
 
-    /**
+        $city = City::find($id);
+
+        $city->update([
+            'state_id'  => $request->state_id,
+            'city'      => $request->city,
+            'city_code' => $request->city_code,
+            'status'    => $request->input('status', $city->status),
+        ]);
+
+        // $statusMsg = $request->input('status', $city->status) == 1
+        //     ? 'City status active successfully.'
+        //     : 'City status inactive successfully.';
+
+        if ($request->action == 'status') {
+            $message = $request->status == 1
+                ? 'City Status Active Successfully.'
+                : 'City status inactive successfully.';
+        } else {
+            $message = 'City updated successfully.';
+        }
+        return redirect()->route('cities.index')
+                ->with('success', $message);
+    }
+    /** 
      * Remove the specified resource from storage.
      */
-    public function destroy(City $city)
+    public function destroy(string $id)
     {
-        //
+        $city = City::find($id);
+
+        $city->delete();
+
+        return redirect()->route('cities.index')
+            ->with('success', 'City deleted successfully.');
     }
 }
