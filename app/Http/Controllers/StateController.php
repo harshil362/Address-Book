@@ -40,7 +40,12 @@ class StateController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                Rule::exists('countries', 'id')->where('status', 1),
+                // Rule::exists('countries', 'id')->where('status', 1),
+                function ($attribute, $value, $fail) {
+                    if (!Country::where('id', $value)->where('status', 1)->exists()) {
+                        $fail('The selected country is invalid or inactive.');
+                    }
+                },
             ],
             'state' => 'required|unique:states,state',
             'state_code' => 'required|numeric|digits:6|unique:states,state_code',
@@ -84,7 +89,13 @@ class StateController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                Rule::exists('countries', 'id'),
+                //Rule::exists('countries', 'id'),
+                function ($attribute, $value, $fail) {
+                    if (!Country::where('id', $value)->where('status', 1)->exists()) {
+                        $fail('The selected country is invalid or inactive.');
+                    }
+                },
+
             ],
             'state' => 'required|unique:states,state,' . $id,
             'state_code' => 'required|numeric|digits:6|unique:states,state_code,' . $id,

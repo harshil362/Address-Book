@@ -72,7 +72,7 @@
                             @csrf
                             @method('PUT')
                             <input type="hidden" name="action" value="update">
-                            
+
                             <input type="hidden"
                                 name="country_id"
                                 value="{{ $selectedCountryId }}">
@@ -135,8 +135,10 @@
                                 <input type="text"
                                     name="city_code"
                                     class="form-control @error('city_code') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
-                                    value="{{ old('city_code', $city->city_code) }}">
-
+                                    value="{{ old('city_code', $city->city_code) }}"
+                                    
+                                    maxlength="6"
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 @error('city_code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

@@ -6,7 +6,6 @@ use App\Models\City;
 use App\Models\State;
 use App\Models\Country;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class CityController extends Controller
 {
@@ -65,21 +64,29 @@ class CityController extends Controller
             'country_id' => [
                 'required',
                 //Rule::exists('countries', 'id')->where('status', 1),
-                //              function ($attribute, $value, $fail) {
-                //     if (!Country::where('id', $value)
-                //         ->where('status', 1)
-                //         ->exists()) {
+                function ($attribute, $value, $fail) {
+                    if (!Country::where('id', $value)
+                        ->where('status', 1)
+                        ->exists()) {
 
-                //         $fail('The selected country is invalid or inactive.');
-                //     }
-                // },
+                        $fail('The selected country is invalid or inactive.');
+                    }
+                },
 
             ],
             'state_id' => [
                 'required',
-                //         Rule::exists('states', 'id')
-                //             ->where('status', 1)
-                //             ->where('country_id', $request->country_id),
+                // Rule::exists('states', 'id')
+                //     ->where('status', 1)
+                //     ->where('country_id', $request->country_id),
+                function ($attribute, $value, $fail) {
+                    if (!State::where('id', $value)
+                        ->where('status', 1)
+                        ->where('country_id', request()->country_id)
+                        ->exists()) {
+                        $fail('The selected state is invalid or inactive.');
+                    }
+                },
             ],
             'city' => 'required|unique:cities,city',
             //  'city_code' => 'required|unique:cities,city_code|digits:6',
@@ -136,12 +143,27 @@ class CityController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                Rule::exists('countries', 'id'),
+                //  Rule::exists('countries', 'id'),
+                function ($attribute, $value, $fail) {
+                    if (!Country::where('id', $value)->exists()) {
+                        $fail('The selected country is invalid.');
+                    }
+                },
             ],
             'state_id'   => [
                 'required',
-                Rule::exists('states', 'id')
-                    ->where('country_id', $request->country_id),
+                // Rule::exists('states', 'id')
+                //     ->where('country_id', $request->country_id),
+                function ($attribute, $value, $fail) use ($request) {
+                    if (
+                        !State::where('id', $value)
+                            ->where('country_id', $request->country_id)
+                            ->exists()
+                    ) {
+                        $fail('The selected state is invalid.');
+                    }
+                },
+
             ],
             'city'       => 'required|unique:cities,city,' . $id,
             'city_code'  => 'required|numeric|digits:6|unique:cities,city_code,' . $id,
@@ -168,7 +190,7 @@ class CityController extends Controller
             $message = 'City updated successfully.';
         }
         return redirect()->route('cities.index')
-                ->with('success', $message);
+            ->with('success', $message);
     }
     /** 
      * Remove the specified resource from storage.

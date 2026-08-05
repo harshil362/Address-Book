@@ -7,7 +7,7 @@ use App\Models\State;
 use App\Models\Area;
 use Illuminate\Http\Request;
 use App\Models\City;
-use Illuminate\Validation\Rule;
+use App\Models\AddressBook;
 
 class AreaController extends Controller
 {
@@ -65,19 +65,46 @@ class AreaController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                Rule::exists('countries', 'id')->where('status', 1),
+                //Rule::exists('countries', 'id')->where('status', 1),
+                function ($attribute, $value, $fail) {
+                    if (!Country::where('id', $value)
+                        ->where('status', 1)
+                        ->exists()) {
+
+                        $fail('The selected country is invalid or inactive.');
+                    }
+                },
             ],
             'state_id' => [
                 'required',
-                Rule::exists('states', 'id')
-                    ->where('status', 1)
-                    ->where('country_id', $request->country_id),
+                // Rule::exists('states', 'id')
+                //     ->where('status', 1)
+                //     ->where('country_id', $request->country_id),
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!State::where('id', $value)
+                        ->where('status', 1)
+                        ->where('country_id', $request->country_id)
+                        ->exists()) {
+
+                        $fail('The selected state is invalid or inactive.');
+                    }
+                },
             ],
             'city_id' => [
                 'required',
-                Rule::exists('cities', 'id')
-                    ->where('status', 1)
-                    ->where('state_id', $request->state_id),
+                // Rule::exists('cities', 'id')
+                //     ->where('status', 1)
+                //     ->where('state_id', $request->state_id),
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!City::where('id', $value)
+                        ->where('status', 1)
+                        ->where('state_id', $request->state_id)
+                        ->exists()) {
+
+                        $fail('The selected city is invalid or inactive.');
+                    }
+                },
+
             ],
             'area' => 'required|unique:areas,area',
             'pincode' => 'required|numeric|digits:6|unique:areas,pincode',
@@ -147,17 +174,39 @@ class AreaController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                Rule::exists('countries', 'id'),
+                // Rule::exists('countries', 'id'),
+                function ($attribute, $value, $fail) {
+                    if (!Country::where('id', $value)->exists()) {
+                        $fail('The selected country is invalid.');
+                    }
+                },
             ],
             'state_id' => [
                 'required',
-                Rule::exists('states', 'id')
-                    ->where('country_id', $request->country_id),
+                // Rule::exists('states', 'id')
+                //     ->where('country_id', $request->country_id),
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!State::where('id', $value)
+                        ->where('country_id', $request->country_id)
+                        ->exists()) {
+
+                        $fail('The selected state is invalid.');
+                    }
+                },
             ],
             'city_id' => [
                 'required',
-                Rule::exists('cities', 'id')
-                    ->where('state_id', $request->state_id),
+                // Rule::exists('cities', 'id')
+                //     ->where('state_id', $request->state_id),
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!City::where('id', $value)
+                        ->where('state_id', $request->state_id)
+                        ->exists()) {
+
+                        $fail('The selected city is invalid.');
+                    }
+                },
+
             ],
             'area' => 'required|unique:areas,area,' . $id,
             //  'pincode' => 'required|numeric|digits:6|unique:areas,pincode'. $id,
@@ -172,10 +221,11 @@ class AreaController extends Controller
             'pincode'  => $request->pincode,
             'status'   => $request->input('status', $area->status),
         ]);
-
-        // $statusMsg = $request->input('status', $area->status) == 1
-        //     ? 'Area status active successfully.'
-        //     : 'Area status inactive successfully.';
+        
+        AddressBook::where('area_id', $area->id)
+            ->update([
+                'pincode' => $request->pincode,
+            ]);
 
         if ($request->action == 'status') {
             $message = $request->status == 1
@@ -183,8 +233,8 @@ class AreaController extends Controller
                 : 'Area status inactive successfully.';
         } else {
             $message = 'Area updated successfully.';
-    }
-    return redirect()->route('areas.index')
+        }
+        return redirect()->route('areas.index')
             ->with('success', $message);
     }
 

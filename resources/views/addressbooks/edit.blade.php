@@ -132,7 +132,7 @@
                         {{-- Pincode --}}
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Pincode</label>
-                            <input type="text" name="pincode" id="pincode" class="form-control @error('pincode') is-invalid @else @if($errors->any()) is-valid @endif @enderror" value="{{ old('pincode', $addressBook->pincode) }}" placeholder="Enter Pincode">
+                            <input type="text" name="pincode" id="pincode" class="form-control @error('pincode') is-invalid @else @if($errors->any()) is-valid @endif @enderror" value="{{ old('pincode', $addressBook->pincode) }}" placeholder="Enter Pincode" readonly>
                             @error('pincode')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -261,7 +261,7 @@
             }
 
             function fetchStates(countryId, selectId = '') {
-                fetch(`/api/countries/${countryId}/states`)
+                fetch('/get-states/' + countryId)
                     .then(res => res.json())
                     .then(data => {
                         clearSelect(stateSelect, 'State');
@@ -276,7 +276,8 @@
             }
 
             function fetchCities(stateId, selectId = '') {
-                fetch(`/api/states/${stateId}/cities`)
+                fetch('/get-cities/' + stateId)
+
                     .then(res => res.json())
                     .then(data => {
                         clearSelect(citySelect, 'City');
@@ -291,7 +292,7 @@
             }
 
             function fetchAreas(cityId, selectId = '') {
-                fetch(`/api/cities/${cityId}/areas`)
+                fetch('/get-areas/' + cityId)
                     .then(res => res.json())
                     .then(data => {
                         clearSelect(areaSelect, 'Area');

@@ -49,7 +49,7 @@
                                     value="{{ old('country') }}"
                                     placeholder="Enter Country Name">
                                 @error('country')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -60,9 +60,12 @@
                                     name="country_code"
                                     class="form-control @error('country_code') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
                                     value="{{ old('country_code') }}"
-                                    placeholder="Enter Country Code">
+                                    placeholder="Enter Country Code"
+                                    
+                                    maxlength="6"
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">>
                                 @error('country_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 

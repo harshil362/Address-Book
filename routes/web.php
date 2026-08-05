@@ -27,40 +27,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('cities', CityController::class);
     Route::resource('areas', AreaController::class);
     Route::resource('addressbooks', AddressBookController::class);
+
+    Route::get('/get-states/{countryId}', [AddressBookController::class, 'getStates']);
+    Route::get('/get-cities/{stateId}', [AddressBookController::class, 'getCities']);
+    Route::get('/get-areas/{cityId}', [AddressBookController::class, 'getAreas']);
 });
 
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
-
-
-/*
-|--------------------------------------------------------------------------
-| Dynamic dropdown helper API routes (no auth needed)
-|--------------------------------------------------------------------------
-*/
-// Route::get('api/countries/{country}/states', function ($countryId) {
-//     return App\Models\State::where('country_id', $countryId)
-//         ->where('status', 1)
-//         //.->whereHas('country', fn($q) => $q->where('status', 1))
-//         ->get();
-// });
-
-// Route::get('api/states/{state}/cities', function ($stateId) {
-//     return App\Models\City::where('state_id', $stateId)
-//         ->where('status', 1)
-//         ->whereHas('state', fn($q) => $q->where('status', 1)->whereHas('country', fn($q2) => $q2->where('status', 1)))
-//         ->get();
-// });
-
-// Route::get('api/cities/{city}/areas', function ($cityId) {
-//     return App\Models\Area::where('city_id', $cityId)
-//         ->where('status', 1)
-//         ->whereHas('city', fn($q) => $q->where('status', 1)
-//             ->whereHas('state', fn($q2) => $q2->where('status', 1)
-//                 ->whereHas('country', fn($q3) => $q3->where('status', 1))
-//             )
-//         )
-//         ->get();
-// });

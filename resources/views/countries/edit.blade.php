@@ -30,8 +30,8 @@
 
                             @csrf
                             @method('PUT')
-<input type="hidden" name="action" value="update">
-                             <div class="mb-3">
+                            <input type="hidden" name="action" value="update">
+                            <div class="mb-3">
                                 <label class="form-label">Country Name</label>
 
                                 <input type="text"
@@ -39,32 +39,34 @@
                                     class="form-control @error('country') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
                                     value="{{ old('country', $country->country) }}">
                                 @error('country')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                             </div>
+                            </div>
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Country Code</label>
 
                                 <input type="text"
                                     name="country_code"
                                     class="form-control @error('country_code') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
-                                    value="{{ old('country_code', $country->country_code) }}">
+                                    value="{{ old('country_code', $country->country_code) }}"
+                                    maxlength="6"
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 @error('country_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                             </div>
+                            </div>
 
-                          
 
-                             <div class="d-flex justify-content-start gap-2 mt-3">
-                                 <button type="submit" class="btn btn-primary">
-                                     Update Country
-                                 </button>
-                                 <a href="{{ route('countries.index') }}" class="btn btn-secondary">
-                                     Back
-                                 </a>
-                             </div>
+
+                            <div class="d-flex justify-content-start gap-2 mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    Update Country
+                                </button>
+                                <a href="{{ route('countries.index') }}" class="btn btn-secondary">
+                                    Back
+                                </a>
+                            </div>
 
                         </form>
 

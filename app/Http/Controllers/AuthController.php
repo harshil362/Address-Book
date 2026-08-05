@@ -31,11 +31,11 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
-            Auth::login($user);
+          //  Auth::login($user);
 
             return redirect()
-                ->route('dashboard')
-                ->with('success', 'Welcome! Your account has been created successfully.');
+                ->route('login')
+                ->with('success', 'Registration successful! Please log in to continue..');
         } catch (\Exception $e) {
             return redirect()
                 ->back()

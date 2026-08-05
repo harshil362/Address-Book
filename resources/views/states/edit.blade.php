@@ -80,13 +80,14 @@
                                 <input type="text"
                                     name="state_code"
                                     class="form-control @error('state_code') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
-                                    value="{{ old('state_code', $state->state_code) }}">
+                                    value="{{ old('state_code', $state->state_code) }}"
+
+                                    maxlength="6"
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 @error('state_code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
-
 
                             <div class="d-flex justify-content-start gap-2 mt-3">
                                 <button type="submit" class="btn btn-primary">

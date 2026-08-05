@@ -175,7 +175,9 @@
                                 <input type="text"
                                     name="pincode"
                                     class="form-control @error('pincode') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
-                                    value="{{ old('pincode', $area->pincode) }}">
+                                    value="{{ old('pincode', $area->pincode) }}"
+                                maxlength="6"
+                                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
                                 @error('pincode')
                                 <div class="invalid-feedback">{{ $message }}</div>
