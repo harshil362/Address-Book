@@ -9,6 +9,7 @@ use App\Models\State;
 use App\Models\City;
 use App\Models\Area;
 
+use function Laravel\Prompts\select;
 
 class AddressBookController extends Controller
 {
@@ -18,7 +19,6 @@ class AddressBookController extends Controller
     public function index()
     {
         $addressbooks = AddressBook::with('country', 'state', 'city', 'area')->get();
-
         return view('addressbooks.index', compact('addressbooks'));
     }
 
@@ -46,8 +46,8 @@ class AddressBookController extends Controller
 
             'country_id'         => [
                 'required',
-                // Rule::exists('countries', 'id')->where('status', 1),
-                function ($attribute, $value, $fail) {
+
+                function ($value, $fail) {
                     if (!Country::where('id', $value)->where('status', 1)->exists()) {
                         $fail('The selected country is invalid or inactive.');
                     }
@@ -55,10 +55,7 @@ class AddressBookController extends Controller
             ],
             'state_id'           => [
                 'required',
-                // Rule::exists('states', 'id')
-                //     ->where('status', 1)
-                //     ->where('country_id', $request->country_id),
-                function ($attribute, $value, $fail) use ($request) {
+                function ($value, $fail) use ($request) {
                     if (!State::where('id', $value)
                         ->where('status', 1)
                         ->where('country_id', $request->country_id)
@@ -66,17 +63,16 @@ class AddressBookController extends Controller
 
                         $fail('The selected state is invalid or inactive.');
                     }
+
                 },
 
             ],
 
             'city_id'            => [
                 'required',
-                // Rule::exists('cities', 'id')
-                //     ->where('status', 1)
-                //     ->where('state_id', $request->state_id),
 
-                function ($attribute, $value, $fail) use ($request) {
+
+                function ($value, $fail) use ($request) {
                     if (!City::where('id', $value)
                         ->where('status', 1)
                         ->where('state_id', $request->state_id)
@@ -89,11 +85,8 @@ class AddressBookController extends Controller
 
             'area_id'            => [
                 'required',
-                // Rule::exists('areas', 'id')
-                //     ->where('status', 1)
-                //     ->where('city_id', $request->city_id),
 
-                function ($attribute, $value, $fail) use ($request) {
+                function ($value, $fail) use ($request) {
                     if (!Area::where('id', $value)
                         ->where('status', 1)
                         ->where('city_id', $request->city_id)
@@ -102,6 +95,7 @@ class AddressBookController extends Controller
                         $fail('The selected area is invalid or inactive.');
                     }
                 },
+                
             ],
 
             'address_line_1'     => 'required',
@@ -149,7 +143,7 @@ class AddressBookController extends Controller
 
     public function edit(string $id)
     {
-        $addressBook = AddressBook::findOrFail($id);
+        $addressBook = AddressBook::findOrFail($id); 
         $countries = Country::where('status', 1)->get();
 
         return view('addressbooks.edit', compact('addressBook', 'countries'));
@@ -168,13 +162,13 @@ class AddressBookController extends Controller
                 'status' => $request->status,
             ]);
 
-            // $statusMsg = $request->status == 1
-            //     ? 'Address Book status active successfully.'
-            //     : 'Address Book status inactive successfully.';
+
             if ($request->action == 'status') {
                 $message = $request->status == 1
                     ? 'Address Book Status Active Successfully.'
                     : 'Address Book inactive successfully.';
+                    // ? true 
+                    //: false
             } else {
                 $message = 'Address Book updated successfully.';
             }
@@ -192,8 +186,8 @@ class AddressBookController extends Controller
 
             'country_id'         => [
                 'required',
-                //Rule::exists('countries', 'id')->where('status', 1),
-                function ($attribute, $value, $fail) {
+                
+                function ($value, $fail) {
                     if (!Country::where('id', $value)
                         ->where('status', 1)
                         ->exists()) {
@@ -205,10 +199,7 @@ class AddressBookController extends Controller
             ],
             'state_id'           => [
                 'required',
-                // Rule::exists('states', 'id')
-                //     ->where('status', 1)
-                //     ->where('country_id', $request->country_id),
-                function ($attribute, $value, $fail) use ($request) {
+                function ($value, $fail) use ($request) {
                     if (!State::where('id', $value)
                         ->where('status', 1)
                         ->where('country_id', $request->country_id)
@@ -220,11 +211,8 @@ class AddressBookController extends Controller
             ],
             'city_id'            => [
                 'required',
-                // Rule::exists('cities', 'id')
-                //     ->where('status', 1)
-                //     ->where('state_id', $request->state_id),
 
-                function ($attribute, $value, $fail) use ($request) {
+                function ($value, $fail) use ($request) {
                     if (!City::where('id', $value)
                         ->where('status', 1)
                         ->where('state_id', $request->state_id)
@@ -236,11 +224,8 @@ class AddressBookController extends Controller
             ],
             'area_id'            => [
                 'required',
-                // Rule::exists('areas', 'id')
-                //     ->where('status', 1)
-                //     ->where('city_id', $request->city_id),
 
-                function ($attribute, $value, $fail) use ($request) {
+                function ($value, $fail) use ($request) {
                     if (!Area::where('id', $value)
                         ->where('status', 1)
                         ->where('city_id', $request->city_id)

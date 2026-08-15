@@ -17,7 +17,6 @@ class StateController extends Controller
     public function index()
     {
         $states = State::with('country')->get();
-
         return view('states.index', compact('states'));
     }
 
@@ -40,7 +39,7 @@ class StateController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                // Rule::exists('countries', 'id')->where('status', 1),
+
                 function ($attribute, $value, $fail) {
                     if (!Country::where('id', $value)->where('status', 1)->exists()) {
                         $fail('The selected country is invalid or inactive.');
@@ -89,7 +88,7 @@ class StateController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                //Rule::exists('countries', 'id'),
+
                 function ($attribute, $value, $fail) {
                     if (!Country::where('id', $value)->where('status', 1)->exists()) {
                         $fail('The selected country is invalid or inactive.');
@@ -109,11 +108,6 @@ class StateController extends Controller
             'state_code' => $request->state_code,
             'status' => $request->input('status', $state->status),
         ]);
-
-        // $statusMsg = $request->input('status', $state->status) == 1 
-        //     ? 'State status active successfully.' 
-        //     : 'State status inactive successfully.';
-
 
         if ($request->action == 'status') {
             $message = $request->status == 1

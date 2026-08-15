@@ -15,7 +15,6 @@ class CityController extends Controller
     public function index()
     {
         $cities = City::with('state')->get();
-
         return view('cities.index', compact('cities'));
     }
 
@@ -24,22 +23,6 @@ class CityController extends Controller
      */
     public function create(Request $request)
     {
-        //filter 
-        // $countries = Country::where('status', 1)->get();
-
-        // $states = collect();
-        // $countryId = old('country_id', $request->country_id);
-
-        // if ($countryId) {
-        //     $states = State::where('country_id', $countryId)
-        //         ->where('status', 1)
-        //         ->whereHas('country', function ($q) {
-        //             $q->where('status', 1);
-        //         })
-        //         ->get();
-        // }
-
-        // return view('cities.create', compact('countries', 'states'));
 
         $countries = Country::where('status', 1)->get();
 
@@ -50,6 +33,8 @@ class CityController extends Controller
             $states = State::where('country_id', $countryId)
                 ->where('status', 1)
                 ->get();
+
+               
         }
 
         return view('cities.create', compact('countries', 'states'));
@@ -63,7 +48,7 @@ class CityController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                //Rule::exists('countries', 'id')->where('status', 1),
+    
                 function ($attribute, $value, $fail) {
                     if (!Country::where('id', $value)
                         ->where('status', 1)
@@ -76,9 +61,7 @@ class CityController extends Controller
             ],
             'state_id' => [
                 'required',
-                // Rule::exists('states', 'id')
-                //     ->where('status', 1)
-                //     ->where('country_id', $request->country_id),
+
                 function ($attribute, $value, $fail) {
                     if (!State::where('id', $value)
                         ->where('status', 1)
@@ -89,7 +72,6 @@ class CityController extends Controller
                 },
             ],
             'city' => 'required|unique:cities,city',
-            //  'city_code' => 'required|unique:cities,city_code|digits:6',
             'city_code' => 'required|numeric|digits:6|unique:cities,city_code',
             //'status' => 'required',
         ]);
@@ -143,7 +125,6 @@ class CityController extends Controller
         $request->validate([
             'country_id' => [
                 'required',
-                //  Rule::exists('countries', 'id'),
                 function ($attribute, $value, $fail) {
                     if (!Country::where('id', $value)->exists()) {
                         $fail('The selected country is invalid.');
@@ -152,8 +133,6 @@ class CityController extends Controller
             ],
             'state_id'   => [
                 'required',
-                // Rule::exists('states', 'id')
-                //     ->where('country_id', $request->country_id),
                 function ($attribute, $value, $fail) use ($request) {
                     if (
                         !State::where('id', $value)
@@ -177,10 +156,6 @@ class CityController extends Controller
             'city_code' => $request->city_code,
             'status'    => $request->input('status', $city->status),
         ]);
-
-        // $statusMsg = $request->input('status', $city->status) == 1
-        //     ? 'City status active successfully.'
-        //     : 'City status inactive successfully.';
 
         if ($request->action == 'status') {
             $message = $request->status == 1

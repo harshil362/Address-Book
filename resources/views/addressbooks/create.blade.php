@@ -127,16 +127,6 @@
                             @enderror
                         </div>
 
-                        {{-- Pincode --}}
-                        <!-- <div class="col-md-6 mb-3">
-                        <label class="form-label">Pincode</label>
-                        <input type="text" name="pincode" id="pincode" class="form-control @error('pincode') is-invalid @else @if($errors->any()) is-valid @endif @enderror"
-                         value="{{ old('pincode') }}" 
-                         placeholder="Enter Pincode">
-                        @error('pincode')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div> -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Pincode</label>
 
@@ -251,6 +241,10 @@
                     fetchStates(countryId, oldStateId);
                 }
             });
+// SELECT *
+// FROM states
+// WHERE country_id = ?
+// AND status = 1;
 
             // Trigger city loading when state changes
             stateSelect.addEventListener('change', function() {
@@ -262,6 +256,10 @@
                     fetchCities(stateId, oldCityId);
                 }
             });
+//             SELECT *
+// FROM cities
+// WHERE state_id = ?
+// AND status = 1;
 
             // Trigger area loading when city changes
             citySelect.addEventListener('change', function() {
@@ -272,6 +270,11 @@
                     fetchAreas(cityId, oldAreaId);
                 }
             });
+
+// SELECT *
+// FROM areas
+// WHERE city_id = ?
+// AND status = 1;
 
             // Trigger pincode autofill when area changes
             areaSelect.addEventListener('change', function() {

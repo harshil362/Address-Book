@@ -46,8 +46,8 @@ class CountryController extends Controller
 
         //return redirect()->route('countries.index');
         return redirect()
-        ->route('countries.index')
-        ->with('success', 'countries created successfully.');
+            ->route('countries.index')
+            ->with('success', 'countries created successfully.');
     }
 
     /**
@@ -70,34 +70,30 @@ class CountryController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        
-       $request->validate([
-        'country' => 'required',
-        'country_code' => 'required|numeric|digits:6',
-    ]);
 
-    $country = Country::find($id);
+        $request->validate([
+            'country' => 'required',
+            'country_code' => 'required|numeric|digits:6',
+        ]);
 
-    $country->update([
-        'country' => $request->country,
-        'country_code' => $request->country_code,
-        'status' => $request->input('status', $country->status), 
-    ]);
-    
+        $country = Country::find($id);
 
-    // $statusMsg = $request->input('status', $country->status) == 1 
-    //     ? 'Country status active successfully.' 
-    //     : 'Country status inactive successfully.';
+        $country->update([
+            'country' => $request->country,
+            'country_code' => $request->country_code,
+            'status' => $request->input('status', $country->status),
+        ]);
 
-    if ($request->action == 'status') {
-    $message = $request->status == 1
-        ? 'Country status active successfully.'
-        : 'Country status inactive successfully.';
-} else {
-    $message = 'Country updated successfully.';
-}
 
-    return redirect()->route('countries.index')->with('success', $message);
+        if ($request->action == 'status') {
+            $message = $request->status == 1
+                ? 'Country status active successfully.'
+                : 'Country status inactive successfully.';
+        } else {
+            $message = 'Country updated successfully.';
+        }
+
+        return redirect()->route('countries.index')->with('success', $message);
     }
 
     /**
