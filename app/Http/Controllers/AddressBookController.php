@@ -8,6 +8,7 @@ use App\Models\Country;
 use App\Models\State;
 use App\Models\City;
 use App\Models\Area;
+use App\Interface\AddressBookServiceInterface;
 
 use function Laravel\Prompts\select;
 
@@ -16,9 +17,17 @@ class AddressBookController extends Controller
     /**
      * Display a listing of the resource.
      */
+    private AddressBookServiceInterface $addressBookService;
+
+    public function __construct(AddressBookServiceInterface $addressBookService)
+    {
+        $this->addressBookService = $addressBookService;
+    }
+
     public function index()
     {
-        $addressbooks = AddressBook::with('country', 'state', 'city', 'area')->get();
+        $addressbooks = $this->addressBookService->getAllAddressBooks();
+
         return view('addressbooks.index', compact('addressbooks'));
     }
 
@@ -27,7 +36,8 @@ class AddressBookController extends Controller
      */
     public function create(Request $request)
     {
-        $countries = Country::where('status', 1)->get();
+
+        $countries = $this->addressBookService->getActiveCountries();
 
         return view('addressbooks.create', compact('countries'));
     }
@@ -37,246 +47,72 @@ class AddressBookController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'contact_type'       => 'required',
-            'name'               => 'required',
-            'mobile_no'          => 'required|numeric|digits:10',
-            'alternate_mobile'   => 'nullable|digits:10',
-            'email'              => 'nullable|email',
+        $validator = $this->addressBookService->validateStoreAddressBook(
+            $request->all()
+        );
 
-            'country_id'         => [
-                'required',
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-                function ($value, $fail) {
-                    if (!Country::where('id', $value)->where('status', 1)->exists()) {
-                        $fail('The selected country is invalid or inactive.');
-                    }
-                },
-            ],
-            'state_id'           => [
-                'required',
-                function ($value, $fail) use ($request) {
-                    if (!State::where('id', $value)
-                        ->where('status', 1)
-                        ->where('country_id', $request->country_id)
-                        ->exists()) {
-
-                        $fail('The selected state is invalid or inactive.');
-                    }
-
-                },
-
-            ],
-
-            'city_id'            => [
-                'required',
-
-
-                function ($value, $fail) use ($request) {
-                    if (!City::where('id', $value)
-                        ->where('status', 1)
-                        ->where('state_id', $request->state_id)
-                        ->exists()) {
-
-                        $fail('The selected city is invalid or inactive.');
-                    }
-                },
-            ],
-
-            'area_id'            => [
-                'required',
-
-                function ($value, $fail) use ($request) {
-                    if (!Area::where('id', $value)
-                        ->where('status', 1)
-                        ->where('city_id', $request->city_id)
-                        ->exists()) {
-
-                        $fail('The selected area is invalid or inactive.');
-                    }
-                },
-                
-            ],
-
-            'address_line_1'     => 'required',
-            'address_line_2'     => 'nullable',
-            'landmark'           => 'nullable',
-            'pincode'            => 'required',
-
-            'is_default_address' => 'required',
-            'status'             => 'required',
-        ]);
-
-        AddressBook::create([
-            'contact_type'       => $request->contact_type,
-            'name'               => $request->name,
-            'mobile'             => $request->mobile_no,
-            'alternate_mobile'   => $request->alternate_mobile,
-            'email'              => $request->email,
-
-            'country_id'         => $request->country_id,
-            'state_id'           => $request->state_id,
-            'city_id'            => $request->city_id,
-            'area_id'            => $request->area_id,
-
-            'address1'           => $request->address_line_1,
-            'address2'           => $request->address_line_2,
-            'landmark'           => $request->landmark,
-            'pincode'            => $request->pincode,
-
-            'is_default'         => $request->is_default_address,
-            'status'             => $request->status,
-        ]);
+        $this->addressBookService->createAddressBook(
+            $request->all()
+        );
 
         return redirect()
             ->route('addressbooks.index')
             ->with('success', 'Address Book created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(AddressBook $addressBook)
-    {
-        //
-    }
-
     public function edit(string $id)
     {
-        $addressBook = AddressBook::findOrFail($id); 
-        $countries = Country::where('status', 1)->get();
+        $addressBook = $this->addressBookService->getAddressBook($id);
+
+        $countries = $this->addressBookService->getActiveCountries();
 
         return view('addressbooks.edit', compact('addressBook', 'countries'));
     }
-
+    
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        $addressBook = AddressBook::findOrFail($id);
+{
+    $validator = $this->addressBookService->validateUpdateAddressBook(
+        $request->all()
+    );
 
-        // Status toggle from index page
-        if ($request->has('_status_toggle')) {
-            $addressBook->update([
-                'status' => $request->status,
-            ]);
-
-
-            if ($request->action == 'status') {
-                $message = $request->status == 1
-                    ? 'Address Book Status Active Successfully.'
-                    : 'Address Book inactive successfully.';
-                    // ? true 
-                    //: false
-            } else {
-                $message = 'Address Book updated successfully.';
-            }
-            return redirect()
-                ->route('addressbooks.index')
-                ->with('success', $message);
-        }
-
-        $request->validate([
-            'contact_type'       => 'required',
-            'name'               => 'required',
-            'mobile_no'          => 'required|numeric|digits:10',
-            'alternate_mobile'   => 'nullable|digits:10',
-            'email'              => 'nullable|email',
-
-            'country_id'         => [
-                'required',
-                
-                function ($value, $fail) {
-                    if (!Country::where('id', $value)
-                        ->where('status', 1)
-                        ->exists()) {
-
-                        $fail('The selected country is invalid or inactive.');
-                    }
-                },
-
-            ],
-            'state_id'           => [
-                'required',
-                function ($value, $fail) use ($request) {
-                    if (!State::where('id', $value)
-                        ->where('status', 1)
-                        ->where('country_id', $request->country_id)
-                        ->exists()) {
-
-                        $fail('The selected state is invalid or inactive.');
-                    }
-                },
-            ],
-            'city_id'            => [
-                'required',
-
-                function ($value, $fail) use ($request) {
-                    if (!City::where('id', $value)
-                        ->where('status', 1)
-                        ->where('state_id', $request->state_id)
-                        ->exists()) {
-
-                        $fail('The selected city is invalid or inactive.');
-                    }
-                },
-            ],
-            'area_id'            => [
-                'required',
-
-                function ($value, $fail) use ($request) {
-                    if (!Area::where('id', $value)
-                        ->where('status', 1)
-                        ->where('city_id', $request->city_id)
-                        ->exists()) {
-
-                        $fail('The selected area is invalid or inactive.');
-                    }
-                },
-
-            ],
-
-            'address_line_1'     => 'required',
-            'address_line_2'     => 'nullable',
-            'landmark'           => 'nullable',
-            'pincode'            => 'required',
-
-            'is_default_address' => 'required',
-        ]);
-
-        $addressBook->update([
-            'contact_type'       => $request->contact_type,
-            'name'               => $request->name,
-            'mobile'             => $request->mobile_no,
-            'alternate_mobile'   => $request->alternate_mobile,
-            'email'              => $request->email,
-
-            'country_id'         => $request->country_id,
-            'state_id'           => $request->state_id,
-            'city_id'            => $request->city_id,
-            'area_id'            => $request->area_id,
-
-            'address1'           => $request->address_line_1,
-            'address2'           => $request->address_line_2,
-            'landmark'           => $request->landmark,
-            'pincode'            => $request->pincode,
-
-            'is_default'         => $request->is_default_address,
-        ]);
-
+    if ($validator->fails()) {
         return redirect()
-            ->route('addressbooks.index')
-            ->with('success', 'Address Book updated successfully.');
+            ->back()
+            ->withErrors($validator)
+            ->withInput();
     }
 
+    $this->addressBookService->updateAddressBook(
+        $id,
+        $request->all()
+    );
+
+    $message = $this->addressBookService->getToastMessage(
+        $request->action,
+        $request->status
+    );
+
+    return redirect()
+        ->route('addressbooks.index')
+        ->with('success', $message);
+}
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        $addressBook = AddressBook::findOrFail($id);
-        $addressBook->delete();
+
+        $this->addressBookService->deleteAddressBook($id);
 
         return redirect()
             ->route('addressbooks.index')
@@ -285,27 +121,21 @@ class AddressBookController extends Controller
 
     public function getStates($countryId)
     {
-        $states = State::where('country_id', $countryId)
-            ->where('status', 1)
-            ->get();
+        $states = $this->addressBookService->getStates($countryId);
 
         return response()->json($states);
     }
 
     public function getCities($stateId)
     {
-        $cities = City::where('state_id', $stateId)
-            ->where('status', 1)
-            ->get();
+        $cities = $this->addressBookService->getCities($stateId);
 
         return response()->json($cities);
     }
 
     public function getAreas($cityId)
     {
-        $areas = Area::where('city_id', $cityId)
-            ->where('status', 1)
-            ->get();
+        $areas = $this->addressBookService->getAreas($cityId);
 
         return response()->json($areas);
     }

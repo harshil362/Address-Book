@@ -8,15 +8,26 @@ use App\Models\Area;
 use Illuminate\Http\Request;
 use App\Models\City;
 use App\Models\AddressBook;
+use App\Interface\AreaServiceInterface;
+
 
 class AreaController extends Controller
 {
+
+    private AreaServiceInterface $areaService;
+
+    public function __construct(AreaServiceInterface $areaService)
+    {
+        $this->areaService = $areaService;
+    }
+
     /**
      * Display a listing of the resource.
-     */  
+     */
     public function index()
     {
-        $areas = Area::with('city.state.country')->get();
+        $areas = $this->areaService->getAllAreas();
+
         return view('areas.index', compact('areas'));
     }
 
@@ -25,34 +36,15 @@ class AreaController extends Controller
      */
     public function create(Request $request)
     {
-        $countries = Country::where('status', 1)->get();
-
-        $states = collect();
-        $cities = collect();
+        $countries = $this->areaService->getActiveCountries();
 
         $countryId = old('country_id', $request->country_id);
         $stateId = old('state_id', $request->state_id);
 
-        if ($countryId) {
-            $states = State::where('country_id', $countryId)
-                ->where('status', 1)
-                ->whereHas('country', function ($q) {
-                    $q->where('status', 1);
-                })
-                ->get();
-                        
-        }
+        $data = $this->areaService->getStatesAndCities($countryId, $stateId);
 
-        if ($stateId) {
-            $cities = City::where('state_id', $stateId)
-                ->where('status', 1)
-                ->whereHas('state', function ($q) {
-                    $q->where('status', 1)->whereHas('country', function ($q2) {
-                        $q2->where('status', 1);
-                    });
-                })
-                ->get();
-        }
+        $states = $data['states'];
+        $cities = $data['cities'];
 
         return view('areas.create', compact('countries', 'states', 'cities'));
     }
@@ -62,165 +54,74 @@ class AreaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'country_id' => [
-                'required',
-               
-                function ($attribute, $value, $fail) {
-                    if (!Country::where('id', $value)
-                        ->where('status', 1)
-                        ->exists()) {
+        $validator = $this->areaService->validateStoreArea(
+            $request->all()
+        );
 
-                        $fail('The selected country is invalid or inactive.');
-                    }
-                },
-            ],
-            'state_id' => [
-                'required',
-                
-                function ($attribute, $value, $fail) use ($request) { //attribute
-                    if (!State::where('id', $value)
-                        ->where('status', 1)
-                        ->where('country_id', $request->country_id)
-                        ->exists()) {
-                        $fail('The selected state is invalid or inactive.');//fail
-                    }
-                },
-            ],
-            'city_id' => [
-                'required',
-              
-                function ($attribute, $value, $fail) use ($request) {
-                    if (!City::where('id', $value)
-                        ->where('status', 1)
-                        ->where('state_id', $request->state_id)
-                        ->exists()) {
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-                        $fail('The selected city is invalid or inactive.');
-                    }
-                },
-
-            ],
-            'area' => 'required|unique:areas,area',
-            'pincode' => 'required|numeric|digits:6|unique:areas,pincode',
-            //'status' => 'required',
-        ]);
-
-        Area::create([
-            'city_id'  => $request->city_id,
-            'area'     => $request->area,
-            'pincode'  => $request->pincode,
-            'status'   => 1
-        ]);
+        $this->areaService->createArea($request->all());
 
         return redirect()->route('areas.index')
             ->with('success', 'Area created successfully.');
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Area $area)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
+
     public function edit(Request $request, string $id)
     {
-        $area = Area::find($id);
+        $area = $this->areaService->getArea($id);
 
-        $countries = Country::where('status', 1)->get();
+        $countries = $this->areaService->getActiveCountries();
 
-        $countryId = $request->country_id ?? $area->city->state->country_id;
+        $countryId = $this->areaService->getCountryId($area, $request->country_id);
+
         $countryChanged = $countryId != $area->city->state->country_id;
 
-        $states = State::where('country_id', $countryId)
-            ->where('status', 1)
-            ->get();
+        $states = $this->areaService->getStatesByCountry($countryId);
 
-        $stateId = $request->state_id;
-        if (!$stateId && !$countryChanged) {
-            $stateId = $area->city->state_id;
-        }
+        $stateId = $this->areaService->getStateId($area, $request->state_id, $countryChanged);
 
-        $cities = collect();
-        if ($stateId) {
-            $cities = City::where('state_id', $stateId)
-                ->where('status', 1)
-                ->get();
-        }
+        $cities = $this->areaService->getCitiesByState($stateId);
 
-        return view('areas.edit', compact('area','countries','states', 'cities'));
+        return view('areas.edit', compact('area', 'countries', 'states', 'cities'));
     }
-
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'country_id' => [
-                'required',
-               
-                function ($attribute, $value, $fail) {
-                    if (!Country::where('id', $value)->exists()) {
-                        $fail('The selected country is invalid.');
-                    }
-                },
-            ],
-            'state_id' => [
-                'required',
-                
-                function ($attribute, $value, $fail) use ($request) {
-                    if (!State::where('id', $value)
-                        ->where('country_id', $request->country_id)
-                        ->exists()) {
+        $validator = $this->areaService->validateUpdateArea(
+            $id,
+            $request->all()
+        );
 
-                        $fail('The selected state is invalid.');
-                    }
-                },
-            ],
-            'city_id' => [
-                'required',
-               
-                function ($attribute, $value, $fail) use ($request) {
-                    if (!City::where('id', $value)
-                        ->where('state_id', $request->state_id)
-                        ->exists()) {
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-                        $fail('The selected city is invalid.');
-                    }
-                },
+        $area = $this->areaService->updateArea($id, $request->all());
 
-            ],
-            'area' => 'required|unique:areas,area,' . $id,
-            'pincode' => 'required|numeric|digits:6|unique:areas,pincode,' . $id,
-        ]);
-
-        $area = Area::find($id);
-
-        $area->update([
-            'city_id'  => $request->city_id,
-            'area'     => $request->area,
-            'pincode'  => $request->pincode,
-            'status'   => $request->input('status', $area->status),
-        ]);
-        
         AddressBook::where('area_id', $area->id)
             ->update([
                 'pincode' => $request->pincode,
-            ]); 
+            ]);
 
-        if ($request->action == 'status') {
-            $message = $request->status == 1
-                ? 'Area Status Active Successfully.'
-                : 'Area status inactive successfully.';
-        } else {
-            $message = 'Area updated successfully.';
-        }
+        $message = $this->areaService->getToastMessage(
+            $request->action,
+            $request->status
+        );
+
         return redirect()->route('areas.index')
             ->with('success', $message);
     }
@@ -230,9 +131,8 @@ class AreaController extends Controller
      */
     public function destroy(string $id)
     {
-        $area = Area::find($id);
+        $this->areaService->deleteArea($id);
 
-        $area->delete();
 
         return redirect()->route('areas.index')
             ->with('success', 'Area deleted successfully.');

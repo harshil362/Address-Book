@@ -6,7 +6,7 @@ use App\Models\state;
 use Illuminate\Http\Request;
 use App\Models\Country;
 use Illuminate\Validation\Rule;
-
+use App\interface\StateServiceInterface;
 use function Laravel\Prompts\select;
 
 class StateController extends Controller
@@ -14,9 +14,17 @@ class StateController extends Controller
     /**
      * Display a listing of the resource.
      */
+    private StateServiceInterface $stateService;
+
+    public function __construct(StateServiceInterface $stateService)
+    {
+        $this->stateService = $stateService;
+    }
+
     public function index()
     {
-        $states = State::with('country')->get();
+        $states = $this->stateService->getAllStates();
+        
         return view('states.index', compact('states'));
     }
 
@@ -25,7 +33,7 @@ class StateController extends Controller
      */
     public function create()
     {
-        $countries = Country::where('status', 1)->get();
+        $countries = $this->stateService->getActiveCountries();
 
         return view('states.create', compact('countries'));
     }
@@ -36,26 +44,22 @@ class StateController extends Controller
     public function store(Request $request)
     {
 
-        $request->validate([
-            'country_id' => [
-                'required',
+        $validator = $this->stateService->validateStoreState($request->all());
 
-                function ($attribute, $value, $fail) {
-                    if (!Country::where('id', $value)->where('status', 1)->exists()) {
-                        $fail('The selected country is invalid or inactive.');
-                    }
-                },
-            ],
-            'state' => 'required|unique:states,state',
-            'state_code' => 'required|numeric|digits:6|unique:states,state_code',
-        ]);
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-        State::create([
-            'country_id' => $request->country_id,
-            'state' => $request->state,
-            'state_code' => $request->state_code,
-            'status' => 1
-        ]);
+        $this->stateService->cretaeState($request->all());
+        //      State::create([ 
+        //     'country_id' => $request->country_id,
+        //     'state' => $request->state,
+        //     'state_code' => $request->state_code,
+        //     'status' => 1
+        // ]);
 
         return redirect()->route('states.index')->with('success', 'State created successfully.');
     }
@@ -73,9 +77,11 @@ class StateController extends Controller
      */
     public function edit(string $id)
     {
-        $state = State::find($id);
 
-        $countries = Country::where('status', 1)->get();
+        $state = $this->stateService->getState($id);
+
+        $countries = $this->stateService->getActiveCountries();
+
 
         return view('states.edit', compact('state', 'countries'));
     }
@@ -83,41 +89,38 @@ class StateController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'country_id' => [
-                'required',
+        $validator = $this->stateService->validateUpdateState(
+            $request->all(),
+            $id
+        );
 
-                function ($attribute, $value, $fail) {
-                    if (!Country::where('id', $value)->where('status', 1)->exists()) {
-                        $fail('The selected country is invalid or inactive.');
-                    }
-                },
-
-            ],
-            'state' => 'required|unique:states,state,' . $id,
-            'state_code' => 'required|numeric|digits:6|unique:states,state_code,' . $id,
-        ]);
-
-        $state = State::find($id);
-
-        $state->update([
-            'country_id' => $request->country_id,
-            'state' => $request->state,
-            'state_code' => $request->state_code,
-            'status' => $request->input('status', $state->status),
-        ]);
-
-        if ($request->action == 'status') {
-            $message = $request->status == 1
-                ? 'State status active successfully.'
-                : 'State status inactive successfully.';
-        } else {
-            $message = 'State updated successfully.';
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
-        return redirect()->route('states.index')->with('success', $message);
+        // $this->stateService->updateState($id, [
+        //     'country_id' => $request->country_id,
+        //     'state' => $request->state,
+        //     'state_code' => $request->state_code,
+        //     'status' => $request->input('status', 1),
+        // ]);
+
+        $this->stateService->updateState($id, $request->all());
+        
+      $message = $this->stateService->getToastMessage(
+            $request->action,
+            $request->status
+        );
+
+        return redirect()
+            ->route('states.index')
+            ->with('success', $message);
     }
 
     /**
@@ -125,9 +128,7 @@ class StateController extends Controller
      */
     public function destroy(string $id)
     {
-        $state = State::find($id);
-
-        $state->delete();
+         $this->stateService->deleteState($id);
 
         return redirect()->route('states.index')->with('success', 'State deleted successfully.');
     }

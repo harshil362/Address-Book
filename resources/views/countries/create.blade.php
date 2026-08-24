@@ -63,7 +63,7 @@
                                     placeholder="Enter Country Code"
                                     
                                     maxlength="6"
-                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">>
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 @error('country_code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

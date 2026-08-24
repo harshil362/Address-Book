@@ -5,16 +5,25 @@ namespace App\Http\Controllers;
 use App\Models\Country;
 use Illuminate\Http\Request;
 
+use App\Interface\CountryServiceInterface;
+
+
 class CountryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    protected $countryService;
+
+    public function __construct(CountryServiceInterface $countryService)
+    {
+        $this->countryService = $countryService;
+    }
+
     public function index()
     {
-        //return "Country List";
-
-        $countries = Country::all();
+        $countries = $this->countryService->getAllCountries();
 
         return view('countries.index', compact('countries'));
     }
@@ -33,34 +42,35 @@ class CountryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'country' => 'required|unique:countries,country',
-            'country_code' => 'required|numeric|digits:6|unique:countries,country_code',
-        ]);
+        $validator = $this->countryService->validateCountry($request->all());
 
-        Country::create([
-            'country' => $request->country,
-            'country_code' => $request->country_code,
-            //'status' => $request->status,
-        ]);
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-        //return redirect()->route('countries.index');
+        // $this->countryService->createCountries([
+        //     'country' => $request->country,
+        //     'country_code' => $request->country_code, 
+        //     //'status' => $request->status,
+        // ]);
+
+        $this->countryService->createCountries($request->all());
+
         return redirect()
             ->route('countries.index')
             ->with('success', 'countries created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Country $country) {}
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
     {
-        $country = Country::find($id);
+        $country = $this->countryService->getCountries($id);
 
         return view('countries.edit', compact('country'));
     }
@@ -71,27 +81,27 @@ class CountryController extends Controller
     public function update(Request $request, string $id)
     {
 
-        $request->validate([
-            'country' => 'required',
-            'country_code' => 'required|numeric|digits:6',
-        ]);
+        $validator = $this->countryService->validateUpdateCountry(
+            $id,
+            $request->all()
+        );
 
-        $country = Country::find($id);
-
-        $country->update([
-            'country' => $request->country,
-            'country_code' => $request->country_code,
-            'status' => $request->input('status', $country->status),
-        ]);
-
-
-        if ($request->action == 'status') {
-            $message = $request->status == 1
-                ? 'Country status active successfully.'
-                : 'Country status inactive successfully.';
-        } else {
-            $message = 'Country updated successfully.';
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
         }
+
+        $this->countryService->getCountries($id);
+
+        $this->countryService->updateCountries($id, $request->all());
+
+
+        $message = $this->countryService->getToastMessage(
+            $request->action,
+            $request->status
+        );
 
         return redirect()->route('countries.index')->with('success', $message);
     }
@@ -101,9 +111,7 @@ class CountryController extends Controller
      */
     public function destroy(string $id)
     {
-        $country = Country::find($id);
-
-        $country->delete();
+        $this->countryService->deleteCountry($id);
 
         return redirect()->route('countries.index')->with('success', 'Country deleted successfully.');
     }

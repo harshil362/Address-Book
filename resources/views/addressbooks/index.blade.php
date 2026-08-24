@@ -78,8 +78,29 @@
                                 <form action="{{ route('addressbooks.update', $addressbook->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
-
+                                    <!-- 
                                     <input type="hidden" name="_status_toggle" value="1">
+                                    <input type="hidden" name="status" value="{{ $addressbook->status ? 0 : 1 }}">
+                                    <input type="hidden" name="action" value="status"> -->
+
+                                    <input type="hidden" name="contact_type" value="{{ $addressbook->contact_type }}">
+                                    <input type="hidden" name="name" value="{{ $addressbook->name }}">
+                                    <input type="hidden" name="mobile_no" value="{{ $addressbook->mobile }}">
+                                    <input type="hidden" name="alternate_mobile" value="{{ $addressbook->alternate_mobile }}">
+                                    <input type="hidden" name="email" value="{{ $addressbook->email }}">
+
+                                    <input type="hidden" name="country_id" value="{{ $addressbook->country_id }}">
+                                    <input type="hidden" name="state_id" value="{{ $addressbook->state_id }}">
+                                    <input type="hidden" name="city_id" value="{{ $addressbook->city_id }}">
+                                    <input type="hidden" name="area_id" value="{{ $addressbook->area_id }}">
+
+                                    <input type="hidden" name="address_line_1" value="{{ $addressbook->address1 }}">
+                                    <input type="hidden" name="address_line_2" value="{{ $addressbook->address2 }}">
+                                    <input type="hidden" name="landmark" value="{{ $addressbook->landmark }}">
+                                    <input type="hidden" name="pincode" value="{{ $addressbook->pincode }}">
+
+                                    <input type="hidden" name="is_default_address" value="{{ $addressbook->is_default }}">
+
                                     <input type="hidden" name="status" value="{{ $addressbook->status ? 0 : 1 }}">
                                     <input type="hidden" name="action" value="status">
 
