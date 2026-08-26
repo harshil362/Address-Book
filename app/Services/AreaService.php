@@ -8,59 +8,38 @@ use App\Models\City;
 use App\Models\state;
 use App\Models\Country;
 use App\Models\AddressBook;
-
+use App\RepositoryInterface\AreaRepositoryInterface;
 class AreaService implements AreaServiceInterface
 {
     /**
      * Create a new class instance.
      */
-    public function __construct()
+   
+    private AreaRepositoryInterface $areaRepository;
+
+    public function __construct(AreaRepositoryInterface $areaRepository)
     {
-        //
+        $this->areaRepository = $areaRepository;
     }
 
     public function getAllAreas()
     {
 
-        return Area::with('city.state.country')->get();
+        //return Area::with('city.state.country')->get();
+        return $this->areaRepository->getAllAreas();
     }
 
 
     public function getActiveCountries()
     {
-        return Country::where('status', 1)->get();
+        return $this->areaRepository->getActiveCountries();
+
     }
 
     public function getStatesAndCities($countryId, $stateId)
     {
-        $states = collect();
-        $cities = collect();
+        return $this->areaRepository->getStatesAndCities($countryId, $stateId);
 
-        if ($countryId) {
-            $states = State::where('country_id', $countryId)
-                ->where('status', 1)
-                ->whereHas('country', function ($q) {
-                    $q->where('status', 1);
-                })
-                ->get();
-        }
-
-        if ($stateId) {
-            $cities = City::where('state_id', $stateId)
-                ->where('status', 1)
-                ->whereHas('state', function ($q) {
-                    $q->where('status', 1)
-                        ->whereHas('country', function ($q2) {
-                            $q2->where('status', 1);
-                        });
-                })
-                ->get();
-        }
-
-        return [
-            'states' => $states,
-            'cities' => $cities,
-        ];
     }
 
     public function validateStoreArea($data)
@@ -115,17 +94,14 @@ class AreaService implements AreaServiceInterface
 
     public function createArea($data)
     {
-        return Area::create([
-            'city_id' => $data['city_id'],
-            'area' => $data['area'],
-            'pincode' => $data['pincode'],
-            'status' => 1,
-        ]);
+         return $this->areaRepository->createArea($data);
     }
+
 
     public function getArea($id)
     {
-        return Area::findOrFail($id);
+        return $this->areaRepository->getArea($id);
+
     }
 
 
@@ -140,9 +116,7 @@ class AreaService implements AreaServiceInterface
 
     public function getStatesByCountry($countryId)
     {
-        return State::where('country_id', $countryId)
-            ->where('status', 1)
-            ->get();
+        return $this->areaRepository->getStatesByCountry($countryId);
     }
 
     public function getStateId($area, $stateId, $countryChanged)
@@ -156,13 +130,7 @@ class AreaService implements AreaServiceInterface
 
     public function getCitiesByState($stateId)
     {
-        if ($stateId) {
-            return City::where('state_id', $stateId)
-                ->where('status', 1)
-                ->get();
-        }
-
-        return collect();
+        return $this->areaRepository->getCitiesByState($stateId);
     }
 
     public function validateUpdateArea($id, $data)
@@ -209,21 +177,7 @@ class AreaService implements AreaServiceInterface
 
     public function updateArea($id, $data)
     {
-        $area = Area::findOrFail($id);
-
-        $area->update([
-            'city_id' => $data['city_id'],
-            'area' => $data['area'],
-            'pincode' => $data['pincode'],
-            'status' => $data['status'] ?? $area->status,
-        ]);
-
-        AddressBook::where('area_id', $area->id)
-            ->update([
-                'pincode' => $data['pincode'],
-            ]);
-
-        return $area;
+        return $this->areaRepository->updateArea($id,$data);
     }
 
     public function getToastMessage($action, $status)
@@ -239,8 +193,7 @@ class AreaService implements AreaServiceInterface
 
     public function deleteArea($id)
     {
-        $area = Area::findOrFail($id);
-
-        return $area->delete();
+        return $this->areaRepository->deleteArea($id);
     }
+    
 }

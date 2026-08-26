@@ -69,12 +69,6 @@ class CityController extends Controller
         }
 
         $this->cityService->createCity($request->all());
-        // $this->cityService->createCity([
-        //     'state_id' => $request->state_id,
-        //     'city' => $request->city,
-        //     'city_code' => $request->city_code,
-        //     'status' => 1
-        // ]);
 
         return redirect()->route('cities.index')
             ->with('success', 'City added successfully.');
@@ -83,6 +77,7 @@ class CityController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+
     public function edit(string $id, Request $request,)
     {
         $city = $this->cityService->getCity($id);

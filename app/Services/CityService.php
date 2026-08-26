@@ -6,22 +6,29 @@ use App\Interface\CityServiceInterface;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\State;
-
+use App\RepositoryInterface\CityRepositoryInterface;
 class CityService implements CityServiceInterface
 {
     /**
      * Create a new class instance.
      */
 
+    private CityRepositoryInterface $cityRepository;
+
+    public function __construct(CityRepositoryInterface $cityRepository)
+{
+    $this->cityRepository = $cityRepository;
+}
 
     public function getAllCities()
     {
-        return City::with('state')->get();
+       return  $this->cityRepository->getAllCities();
     }
 
     public function getActiveCountries()
     {
-        return Country::where('status', 1)->get();
+        return $this->cityRepository->getActiveCountries();
+
     }
 
     public function getCountryId($city, $countryId)
@@ -34,9 +41,8 @@ class CityService implements CityServiceInterface
     }
     public function getActiveStates($countryId)
     {
-        return State::where('country_id', $countryId)
-            ->where('status', 1)
-            ->get();
+         return $this->cityRepository->getActiveStates($countryId);
+
     }
 
     public function validateStoreCity($data)
@@ -53,7 +59,6 @@ class CityService implements CityServiceInterface
                         $fail('The selected country is invalid or inactive.');
                     }
                 },
-
             ],
 
             'state_id' => [
@@ -75,17 +80,14 @@ class CityService implements CityServiceInterface
 
     public function createCity($data)
     {
-        return City::create([
-            'state_id' => $data['state_id'],
-            'city' => $data['city'],
-            'city_code' => $data['city_code'],
-            'status' => 1,
-        ]);
+        return $this->cityRepository->createCity($data);
+
     }
 
     public function getCity($id)
     {
-        return City::findOrFail($id);
+        return $this->cityRepository->getCity($id);
+
     }
 
     public function validateUpdateCity($data, $id)
@@ -120,15 +122,8 @@ class CityService implements CityServiceInterface
     public function updateCity($id, $data)
     {
 
-        $city = City::findOrFail($id);
+     return $this->cityRepository->updateCity($id, $data);
 
-        $city->update([
-            'state_id'  => $data['state_id'],
-            'city'      => $data['city'],
-            'city_code' => $data['city_code'],
-            'status'    => $data['status'] ?? $city->status,
-        ]);
-        return $city;
     }
 
 
@@ -145,8 +140,9 @@ class CityService implements CityServiceInterface
 
     public function deleteCity($id)
     {
-        $city = City::findOrFail($id);
+        return $this->cityRepository->deleteCity($id);
 
-        $city->delete();
     }
+
+    
 }

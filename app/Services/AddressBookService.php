@@ -8,26 +8,28 @@ use App\Models\Country;
 use App\Models\state;
 use App\Models\City;
 use App\Models\Area;
+use App\RepositoryInterface\AddressBookRepositoryInterface;
 
 class AddressBookService implements AddressBookServiceInterface
 {
     /**
      * Create a new class instance.
      */
-    public function __construct()
+    private AddressBookRepositoryInterface $addressBookRepository;
+
+    public function __construct(AddressBookRepositoryInterface $addressBookRepository)
     {
-        //
+        $this->addressBookRepository = $addressBookRepository;
     }
 
     public function getAllAddressBooks()
     {
-        return AddressBook::with('country', 'state', 'city', 'area')->get();
-
+        return $this->addressBookRepository->getAllAddressBooks();
     }
 
     public function getActiveCountries()
     {
-        return Country::where('status', 1)->get();
+        return $this->addressBookRepository->getActiveCountries();
     }
 
     public function validateStoreAddressBook($data)
@@ -102,33 +104,13 @@ class AddressBookService implements AddressBookServiceInterface
 
     public function createAddressBook($data)
     {
-        return AddressBook::create([
-            'contact_type' => $data['contact_type'],
-            'name' => $data['name'],
-            'mobile' => $data['mobile_no'],
-            'alternate_mobile' => $data['alternate_mobile'],
-            'email' => $data['email'],
-
-            'country_id' => $data['country_id'],
-            'state_id' => $data['state_id'],
-            'city_id' => $data['city_id'],
-            'area_id' => $data['area_id'],
-
-            'address1' => $data['address_line_1'],
-            'address2' => $data['address_line_2'],
-            'landmark' => $data['landmark'],
-            'pincode' => $data['pincode'],
-
-            'is_default' => $data['is_default_address'],
-            'status' => $data['status'],
-        ]);
+        return $this->addressBookRepository->createAddressBook($data);
     }
 
     public function getAddressBook($id)
     {
-        return AddressBook::findOrFail($id);
+        return $this->addressBookRepository->getAddressBook($id);
     }
-
 
     public function validateUpdateAddressBook($data)
     {
@@ -202,61 +184,27 @@ class AddressBookService implements AddressBookServiceInterface
 
     public function updateAddressBook($id, $data)
     {
-        $addressBook = AddressBook::findOrFail($id);
-
-        $addressBook->update([
-            'contact_type' => $data['contact_type'],
-            'name' => $data['name'],
-            'mobile' => $data['mobile_no'],
-            'alternate_mobile' => $data['alternate_mobile'],
-            'email' => $data['email'],
-
-            'country_id' => $data['country_id'],
-            'state_id' => $data['state_id'],
-            'city_id' => $data['city_id'],
-            'area_id' => $data['area_id'],
-
-            'address1' => $data['address_line_1'],
-            'address2' => $data['address_line_2'],
-            'landmark' => $data['landmark'],
-            'pincode' => $data['pincode'],
-
-            'is_default' => $data['is_default_address'],
-
-         'status' => $data['status'] ?? $addressBook->status,
-         
-
-        ]);
-
-        return $addressBook;
+        return $this->addressBookRepository->updateAddressBook($id, $data);
     }
 
     public function deleteAddressBook($id)
     {
-        $addressBook = AddressBook::findOrFail($id);
-
-        return $addressBook->delete();
+        return $this->addressBookRepository->deleteAddressBook($id);
     }
 
     public function getStates($countryId)
     {
-        return State::where('country_id', $countryId)
-            ->where('status', 1)
-            ->get();
+        return $this->addressBookRepository->getStates($countryId);
     }
 
     public function getCities($stateId)
     {
-        return City::where('state_id', $stateId)
-            ->where('status', 1)
-            ->get();
+        return $this->addressBookRepository->getCities($stateId);
     }
 
     public function getAreas($cityId)
     {
-        return Area::where('city_id', $cityId)
-            ->where('status', 1)
-            ->get();
+        return $this->addressBookRepository->getAreas($cityId);
     }
 
     public function getToastMessage($action, $status)

@@ -5,6 +5,8 @@ namespace App\services;
 use App\interface\StateServiceInterface;
 use App\Models\state;
 use App\Models\Country;
+use App\RepositoryInterface\StateRepositoryInterface;
+
 
 class StateService implements StateServiceInterface
 
@@ -12,56 +14,41 @@ class StateService implements StateServiceInterface
     /**
      * Create a new class instance.
      */
-    public function __construct()
+    private StateRepositoryInterface $stateRepository;
+
+    public function __construct(StateRepositoryInterface $stateRepository)
     {
-        //
+        $this->stateRepository = $stateRepository;
     }
 
     public function getAllStates()
     {
-        return State::with('country')->get();
+        //return State::with('country')->get();
+        return $this->stateRepository->getAllStates();
     }
 
     public function getActiveCountries()
     {
-        return Country::where('status', 1)->get();
+        //return Country::where('status', 1)->get();
+        return $this->stateRepository->getActiveCountries();
+
     }
 
     public function cretaeState($data)
     {
-        return State::create([
-            'country_id' => $data['country_id'],
-            'state' => $data['state'],
-            'state_code' => $data['state_code'],
-            'status' => 1
-        ]);
+        return $this->stateRepository->createState($data);
+
     }
     public function getState($id)
     {
-        return State::find($id);
+        return $this->stateRepository->getState($id);
+
     }
-
-    // public function updateState($id, $data)
-    // {
-    //     $state = State::findOrFail($id);
-
-    //     $state->update($data);
-
-    //     return $state;
-    // }
 
     public function updateState($id, $data)
 {
-    $state = State::findOrFail($id);
+    return $this->stateRepository->updateState($id, $data);
 
-    $state->update([
-        'country_id' => $data['country_id'],
-        'state' => $data['state'],
-        'state_code' => $data['state_code'],
-        'status' => $data['status'] ?? $state->status,
-    ]);
-
-    return $state;
 }
 
     public function validateStoreState($data)
@@ -101,9 +88,8 @@ class StateService implements StateServiceInterface
 
     public function deleteState($id)
     {
-        $state = State::find($id);
+        return $this->stateRepository->deleteState($id);
 
-        $state->delete();
     }
 
     public function getToastMessage($action, $status)

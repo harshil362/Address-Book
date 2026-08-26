@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 use App\Models\City;
 use App\Models\AddressBook;
 use App\Interface\AreaServiceInterface;
-
-
 class AreaController extends Controller
 {
 
