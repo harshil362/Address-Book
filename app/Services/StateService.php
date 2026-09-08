@@ -3,7 +3,6 @@
 namespace App\services;
 
 use App\interface\StateServiceInterface;
-use App\Models\state;
 use App\Models\Country;
 use App\RepositoryInterface\StateRepositoryInterface;
 

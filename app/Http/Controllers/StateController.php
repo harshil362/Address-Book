@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\state;
 use Illuminate\Http\Request;
-use App\Models\Country;
-use Illuminate\Validation\Rule;
 use App\interface\StateServiceInterface;
-use function Laravel\Prompts\select;
+use Yajra\DataTables\Facades\DataTables;
 
 class StateController extends Controller
 {
@@ -23,11 +21,24 @@ class StateController extends Controller
 
     public function index()
     {
-        $states = $this->stateService->getAllStates();
-        
-        return view('states.index', compact('states'));
+        //     $states = $this->stateService->getAllStates();
+
+        //     return view('states.index', compact('states'));
+        return view('states.index');
     }
 
+
+    public function data()
+    {
+        $states = $this->stateService->getAllStates();
+
+        return DataTables::of($states)
+            ->addColumn('country', function ($state) {
+                return $state->country->country;
+            })
+            ->make(true);
+    }
+    
     /**
      * Show the form for creating a new resource.
      */
@@ -111,9 +122,10 @@ class StateController extends Controller
         //     'status' => $request->input('status', 1),
         // ]);
 
+
         $this->stateService->updateState($id, $request->all());
-        
-      $message = $this->stateService->getToastMessage(
+
+        $message = $this->stateService->getToastMessage(
             $request->action,
             $request->status
         );
@@ -128,7 +140,7 @@ class StateController extends Controller
      */
     public function destroy(string $id)
     {
-         $this->stateService->deleteState($id);
+        $this->stateService->deleteState($id);
 
         return redirect()->route('states.index')->with('success', 'State deleted successfully.');
     }

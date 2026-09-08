@@ -15,7 +15,7 @@ class CityRepository implements CityRepositoryInterface
 
     public function getAllCities()
     {
-        return City::with('state')->get();
+        return City::with('state');
     }
 
      public function getActiveCountries()

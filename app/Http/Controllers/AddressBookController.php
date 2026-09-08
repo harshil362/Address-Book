@@ -2,15 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AddressBook;
 use Illuminate\Http\Request;
-use App\Models\Country;
-use App\Models\State;
-use App\Models\City;
-use App\Models\Area;
-use App\Interface\AddressBookServiceInterface;
 
-use function Laravel\Prompts\select;
+use App\Interface\AddressBookServiceInterface;
+use Yajra\DataTables\Facades\DataTables;
 
 class AddressBookController extends Controller
 {
@@ -26,9 +21,32 @@ class AddressBookController extends Controller
 
     public function index()
     {
+        return view('addressbooks.index');
+    }
+
+    public function data()
+    {
         $addressbooks = $this->addressBookService->getAllAddressBooks();
 
-        return view('addressbooks.index', compact('addressbooks'));
+        return DataTables::of($addressbooks)
+
+            ->addColumn('country', function ($addressbook) {
+                return $addressbook->country?->country;
+            })
+
+            ->addColumn('state', function ($addressbook) {
+                return $addressbook->state?->state;
+            })
+
+            ->addColumn('city', function ($addressbook) {
+                return $addressbook->city?->city;
+            })
+
+            ->addColumn('area', function ($addressbook) {
+                return $addressbook->area?->area;
+            })
+
+            ->make(true);
     }
 
     /**
@@ -75,37 +93,37 @@ class AddressBookController extends Controller
 
         return view('addressbooks.edit', compact('addressBook', 'countries'));
     }
-    
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-{
-    $validator = $this->addressBookService->validateUpdateAddressBook(
-        $request->all()
-    );
+    {
+        $validator = $this->addressBookService->validateUpdateAddressBook(
+            $request->all()
+        );
 
-    if ($validator->fails()) {
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $this->addressBookService->updateAddressBook(
+            $id,
+            $request->all()
+        );
+
+        $message = $this->addressBookService->getToastMessage(
+            $request->action,
+            $request->status
+        );
+
         return redirect()
-            ->back()
-            ->withErrors($validator)
-            ->withInput();
+            ->route('addressbooks.index')
+            ->with('success', $message);
     }
-
-    $this->addressBookService->updateAddressBook(
-        $id,
-        $request->all()
-    );
-
-    $message = $this->addressBookService->getToastMessage(
-        $request->action,
-        $request->status
-    );
-
-    return redirect()
-        ->route('addressbooks.index')
-        ->with('success', $message);
-}
     /**
      * Remove the specified resource from storage.
      */

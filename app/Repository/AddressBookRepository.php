@@ -18,7 +18,10 @@ class AddressBookRepository implements AddressBookRepositoryInterface
     public function getAllAddressBooks()
     {
 
-        return AddressBook::with('country', 'state', 'city', 'area')->get();
+       // return AddressBook::with('country', 'state', 'city', 'area')->get();
+
+           return AddressBook::with('country', 'state', 'city', 'area');
+
     }
 
     public function getActiveCountries()

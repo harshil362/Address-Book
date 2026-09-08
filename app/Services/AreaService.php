@@ -3,11 +3,9 @@
 namespace App\Services;
 
 use App\Interface\AreaServiceInterface;
-use App\Models\Area;
 use App\Models\City;
 use App\Models\state;
 use App\Models\Country;
-use App\Models\AddressBook;
 use App\RepositoryInterface\AreaRepositoryInterface;
 class AreaService implements AreaServiceInterface
 {
@@ -24,8 +22,6 @@ class AreaService implements AreaServiceInterface
 
     public function getAllAreas()
     {
-
-        //return Area::with('city.state.country')->get();
         return $this->areaRepository->getAllAreas();
     }
 

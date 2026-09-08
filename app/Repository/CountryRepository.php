@@ -13,10 +13,10 @@ class CountryRepository implements CountryRepositoryInterface
 
     public function getAllCountries()
     {
-        return Country::all();
+        return Country::query();
     }
 
-     public function createCountries($data)
+    public function createCountries($data)
     {
         return Country::create([
             'country' => $data['country'],

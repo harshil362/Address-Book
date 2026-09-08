@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Interface\CityServiceInterface;
-use App\Models\City;
 use App\Models\Country;
 use App\Models\State;
 use App\RepositoryInterface\CityRepositoryInterface;
@@ -20,6 +19,7 @@ class CityService implements CityServiceInterface
     $this->cityRepository = $cityRepository;
 }
 
+
     public function getAllCities()
     {
        return  $this->cityRepository->getAllCities();
@@ -28,17 +28,17 @@ class CityService implements CityServiceInterface
     public function getActiveCountries()
     {
         return $this->cityRepository->getActiveCountries();
-
     }
 
     public function getCountryId($city, $countryId)
     {
-        if ($countryId) {
+        if ($countryId) { 
             return $countryId;
         } else {
-            return $city->state->country_id;
+            return $city->state->country_id; 
         }
     }
+
     public function getActiveStates($countryId)
     {
          return $this->cityRepository->getActiveStates($countryId);

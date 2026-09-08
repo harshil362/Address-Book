@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Interface\CountryServiceInterface;
 use App\RepositoryInterface\CountryRepositoryInterface;
-use App\Models\Country;
 
 class CountryService implements CountryServiceInterface
 {
@@ -20,7 +19,6 @@ public function __construct(CountryRepositoryInterface $countryRepository)
 
     public function getAllCountries()
     {
-        //return Country::all();
          return $this->countryRepository->getAllCountries();
 
     }

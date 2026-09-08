@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\state;
 use App\Repository\AddressBookRepository;
 use App\Repository\AreaRepository;
 use App\Repository\CityRepository;

@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Country;
-use App\Models\State;
-use App\Models\Area;
 use Illuminate\Http\Request;
-use App\Models\City;
 use App\Models\AddressBook;
 use App\Interface\AreaServiceInterface;
+use Yajra\DataTables\Facades\DataTables;
+
 class AreaController extends Controller
 {
 
@@ -24,11 +22,36 @@ class AreaController extends Controller
      */
     public function index()
     {
+        return view('areas.index');
+    }
+    public function data()
+    {
         $areas = $this->areaService->getAllAreas();
 
-        return view('areas.index', compact('areas'));
-    }
+        return DataTables::of($areas)
 
+            ->addColumn('country', function ($area) {
+                return $area->city?->state?->country?->country;
+            })
+
+            ->addColumn('state', function ($area) {
+                return $area->city?->state?->state;
+            })
+
+            ->addColumn('city', function ($area) {
+                return $area->city?->city;
+            })
+
+            ->addColumn('country_id', function ($area) {
+                return $area->city?->state?->country_id;
+            })
+
+            ->addColumn('state_id', function ($area) {
+                return $area->city?->state_id;
+            })
+
+            ->make(true);
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -130,7 +153,6 @@ class AreaController extends Controller
     public function destroy(string $id)
     {
         $this->areaService->deleteArea($id);
-
 
         return redirect()->route('areas.index')
             ->with('success', 'Area deleted successfully.');

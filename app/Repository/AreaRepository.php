@@ -17,7 +17,7 @@ class AreaRepository implements AreaRepositoryInterface
      */
     public function getAllAreas()
     {
-        return Area::with('city.state.country')->get();
+            return Area::with('city.state.country');
     }
 
     public function getActiveCountries()

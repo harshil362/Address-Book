@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Country;
 use Illuminate\Http\Request;
 
 use App\Interface\CountryServiceInterface;
-
+use Yajra\DataTables\Facades\DataTables;
 
 class CountryController extends Controller
 {
@@ -23,11 +22,16 @@ class CountryController extends Controller
 
     public function index()
     {
-        $countries = $this->countryService->getAllCountries();
-
-        return view('countries.index', compact('countries'));
+        return view('countries.index');
     }
 
+    public function data()
+    {
+        $countries = $this->countryService->getAllCountries();
+
+        return DataTables::of($countries)
+            ->make(true);
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -51,19 +55,12 @@ class CountryController extends Controller
                 ->withInput();
         }
 
-        // $this->countryService->createCountries([
-        //     'country' => $request->country,
-        //     'country_code' => $request->country_code, 
-        //     //'status' => $request->status,
-        // ]);
-
         $this->countryService->createCountries($request->all());
 
         return redirect()
             ->route('countries.index')
             ->with('success', 'countries created successfully.');
     }
-
 
     /**
      * Show the form for editing the specified resource.

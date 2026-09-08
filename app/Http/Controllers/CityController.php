@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\City;
-use App\Models\State;
-use App\Models\Country;
 use Illuminate\Http\Request;
 use App\Interface\CityServiceInterface;
+use Yajra\DataTables\Facades\DataTables;
 
 
 class CityController extends Controller
@@ -24,13 +22,26 @@ class CityController extends Controller
      */
     public function index()
     {
-        //$cities = City::with('state')->get();
-
-        $cities = $this->cityService->getAllCities();
-
-        return view('cities.index', compact('cities'));
+        return view('cities.index');
     }
 
+
+    public function data()
+    {
+        $cities = $this->cityService->getAllCities();
+
+        return DataTables::of($cities)
+            ->addColumn('country', function ($city) {
+                return $city->state->country->country;
+            })
+            ->addColumn('state', function ($city) {
+                return $city->state->state;
+            })
+            ->addColumn('country_id', function ($city) {
+                return $city->state->country_id;
+            })
+            ->make(true);
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -112,7 +123,7 @@ class CityController extends Controller
         }
 
         $city = $this->cityService->getCity($id);
-        
+
         $this->cityService->updateCity($id, $request->all());
 
         $message = $this->cityService->getToastMessage(

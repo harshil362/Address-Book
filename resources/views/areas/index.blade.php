@@ -6,9 +6,14 @@
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet"
+        href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">
 </head>
 
 <body class="bg-light">
+
     @include('layouts.navbar')
 
     <div class="container mt-5">
@@ -16,18 +21,19 @@
         <div class="card shadow">
 
             <div class="card-header d-flex justify-content-between align-items-center">
+
                 <h3>Area List</h3>
 
                 <a href="{{ route('areas.create') }}" class="btn btn-primary">
                     Add Area
                 </a>
+
             </div>
 
             <div class="card-body">
 
-
-
-                <table class="table table-bordered table-striped">
+                <table id="areas-table"
+                    class="table table-bordered table-striped">
 
                     <thead class="table-dark">
 
@@ -45,82 +51,6 @@
                     </thead>
 
                     <tbody>
-
-                        @forelse($areas as $area)
-
-                        <tr>
-
-                            <td>{{ $loop->iteration }}</td>
-
-                            <td>{{ $area->city->state->country->country }}</td>
-
-                            <td>{{ $area->city->state->state }}</td>
-
-                            <td>{{ $area->city->city }}</td>
-
-                            <td>{{ $area->area }}</td>
-
-                            <td>{{ $area->pincode }}</td>
-
-                            <td>
-                                <form action="{{ route('areas.update', $area->id) }}" method="POST">
-                                    @csrf
-                                    @method('PUT')
-
-                                    <input type="hidden" name="country_id" value="{{ $area->city->state->country_id }}">
-                                    <input type="hidden" name="state_id" value="{{ $area->city->state_id }}">
-                                    <input type="hidden" name="city_id" value="{{ $area->city_id }}">
-                                    <input type="hidden" name="area" value="{{ $area->area }}">
-                                    <input type="hidden" name="pincode" value="{{ $area->pincode }}">
-                                    <input type="hidden" name="status" value="{{ $area->status ? 0 : 1 }}">
-                                    <input type="hidden" name="action" value="status">
-
-                                    <div class="form-check form-switch">
-                                        <input
-                                            class="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            onchange="this.form.submit()"
-                                            {{ $area->status ? 'checked' : '' }}>
-                                    </div>
-                                </form>
-                            </td>
-                            <td>
-
-                                <a href="{{ route('areas.edit', $area->id) }}"
-                                    class="btn btn-warning btn-sm">
-                                    Edit
-                                </a>
-
-                                <form action="{{ route('areas.destroy', $area->id) }}"
-                                    method="POST"
-                                    style="display:inline-block;">
-
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Are you sure you want to delete this area?')">
-                                        Delete
-                                    </button>
-
-                                </form>
-
-                            </td>
-
-                        </tr>
-
-                        @empty
-
-                        <tr>
-                            <td colspan="8" class="text-center">
-                                No Area Found.
-                            </td>
-                        </tr>
-
-                        @endforelse
-
                     </tbody>
 
                 </table>
@@ -130,6 +60,162 @@
         </div>
 
     </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
+
+
+    <script>
+        $(document).ready(function() {
+
+            $('#areas-table').DataTable({
+
+                processing: true,
+
+                serverSide: true,
+
+                ajax: "{{ route('areas.data') }}",
+
+                columns: [
+
+                    {
+                        data: 'id',
+                        name: 'id'
+                    },
+
+                    {
+                        data: 'country',
+                        name: 'city.state.country.country'
+                    },
+
+                    {
+                        data: 'state',
+                        name: 'city.state.state'
+                    },
+
+                    {
+                        data: 'city',
+                        name: 'city.city'
+                    },
+
+                    {
+                        data: 'area',
+                        name: 'area'
+                    },
+
+                    {
+                        data: 'pincode',
+                        name: 'pincode'
+                    },
+
+                    {
+                        data: 'status',
+                        name: 'status',
+                        orderable: false,
+                        searchable: false,
+
+                        render: function(data, type, row) {
+
+                            return `
+                <form action="/areas/${row.id}" method="POST">
+
+                    <input type="hidden"
+                           name="_token"
+                           value="{{ csrf_token() }}">
+
+                    <input type="hidden"
+                           name="_method"
+                           value="PUT">
+
+                    <input type="hidden"
+                           name="country_id"
+                           value="${row.country_id}">
+
+                    <input type="hidden"
+                           name="state_id"
+                           value="${row.state_id}">
+
+                    <input type="hidden"
+                           name="city_id"
+                           value="${row.city_id}">
+
+                    <input type="hidden"
+                           name="area"
+                           value="${row.area}">
+
+                    <input type="hidden"
+                           name="pincode"
+                           value="${row.pincode ?? ''}">
+
+                    <input type="hidden"
+                           name="status"
+                           value="${row.status ? 0 : 1}">
+
+                    <input type="hidden"
+                           name="action"
+                           value="status">
+
+                    <div class="form-check form-switch">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            onchange="this.form.submit()"
+                            ${row.status ? 'checked' : ''}>
+
+                    </div>
+
+                </form>
+            `;
+                        }
+                    },
+
+                    {
+                        data: null,
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+
+                        render: function(data, type, row) {
+
+                            return `
+                <a href="/areas/${row.id}/edit"
+                   class="btn btn-warning btn-sm">
+                    Edit
+                </a>
+
+                <form action="/areas/${row.id}"
+                      method="POST"
+                      class="d-inline">
+
+                    <input type="hidden"
+                           name="_token"
+                           value="{{ csrf_token() }}">
+
+                    <input type="hidden"
+                           name="_method"
+                           value="DELETE">
+
+                    <button type="submit"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm('Are you sure you want to delete this area?')">
+                        Delete
+                    </button>
+
+                </form>
+            `;
+                        }
+                    }
+
+                ]
+            });
+
+        });
+    </script>
 
 </body>
 
