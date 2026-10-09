@@ -24,10 +24,12 @@
 
                 <h4>Address Book List</h4>
 
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('address_book.create'))
                 <a href="{{ route('addressbooks.create') }}"
                     class="btn btn-light">
                     Add Address
                 </a>
+                @endif
 
             </div>
 
@@ -74,6 +76,9 @@
 
 
     <script>
+        const canEdit = @json(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('address_book.edit'));
+        const canDelete = @json(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('address_book.delete'));
+
         $(document).ready(function() {
 
             $('#addressbooks-table').DataTable({
@@ -138,6 +143,12 @@
                         searchable: false,
 
                         render: function(data, type, row) {
+                            if (!canEdit) {
+                                return row.status
+                                    ? '<span class="badge bg-success">Active</span>'
+                                    : '<span class="badge bg-secondary">Inactive</span>';
+                            }
+
                             return `
             <form action="/addressbooks/${row.id}" method="POST">
 
@@ -233,32 +244,42 @@
                         searchable: false,
 
                         render: function(data, type, row) {
-                            return `
-            <a href="/addressbooks/${row.id}/edit"
-               class="btn btn-warning btn-sm">
-                Edit
-            </a>
+                            let actions = '';
 
-            <form action="/addressbooks/${row.id}"
-                  method="POST"
-                  class="d-inline">
+                            if (canEdit) {
+                                actions += `
+                                    <a href="/addressbooks/${row.id}/edit"
+                                       class="btn btn-warning btn-sm me-1">
+                                        Edit
+                                    </a>
+                                `;
+                            }
 
-                <input type="hidden"
-                       name="_token"
-                       value="{{ csrf_token() }}">
+                            if (canDelete) {
+                                actions += `
+                                    <form action="/addressbooks/${row.id}"
+                                          method="POST"
+                                          class="d-inline">
 
-                <input type="hidden"
-                       name="_method"
-                       value="DELETE">
+                                        <input type="hidden"
+                                               name="_token"
+                                               value="{{ csrf_token() }}">
 
-                <button type="submit"
-                        class="btn btn-danger btn-sm"
-                        onclick="return confirm('Are you sure you want to delete this address book?')">
-                    Delete
-                </button>
+                                        <input type="hidden"
+                                               name="_method"
+                                               value="DELETE">
 
-            </form>
-        `;
+                                        <button type="submit"
+                                                class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Are you sure you want to delete this address book?')">
+                                            Delete
+                                        </button>
+
+                                    </form>
+                                `;
+                            }
+
+                            return actions || '<span class="text-muted small">-</span>';
                         }
                     }
                 ]

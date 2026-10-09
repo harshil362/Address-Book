@@ -2,24 +2,37 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            MainModuleSeeder::class,
+            RoleSeeder::class,
+            RolePermissionSeeder::class,
         ]);
+
+        $superAdminRole = Role::where('name', 'Super Admin')->first();
+
+        // Ensure default Super Admin account exists and has role
+        $admin = User::firstOrCreate(
+            ['email' => 'Superadmin@admin.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('01230123'),
+            ]
+        );
+
+        if ($superAdminRole) {
+            $admin->roles()->syncWithoutDetaching([$superAdminRole->id]);
+        }
     }
 }

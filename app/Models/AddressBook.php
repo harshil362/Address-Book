@@ -6,9 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AddressBook extends Model
 {
-    //
-
     protected $fillable = [
+        'user_id',
         'contact_type',
         'name',
         'mobile',
@@ -25,6 +24,12 @@ class AddressBook extends Model
         'is_default',
         'status',
     ];
+
+    // Address Book belongs to User (owner)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     // Address Book belongs to Country
     public function country()

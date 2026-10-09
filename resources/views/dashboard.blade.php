@@ -22,6 +22,7 @@
 
     <div class="row g-3">
 
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('country.view'))
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -30,7 +31,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('state.view'))
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -39,7 +42,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('city.view'))
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -48,7 +53,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('area.view'))
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -57,7 +64,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('address_book.view'))
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -66,6 +75,39 @@
                 </div>
             </div>
         </div>
+        @endif
+
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('role_assignment.view'))
+        <div class="col-md-6">
+            <div class="card shadow-sm border-success h-100">
+                <div class="card-body text-center d-flex flex-column justify-content-between p-4">
+                    <div>
+                        <h5 class="text-success fw-bold"><i class="bi bi-shield-check me-2"></i>Role Permissions</h5>
+                        <p class="text-muted small">Create roles with module-wise View, Create, Edit, Delete checkboxes and configure access.</p>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <a href="{{ route('role-permissions.index') }}" class="btn btn-outline-success btn-sm px-3">View Roles</a>
+                        <a href="{{ route('role-permissions.create') }}" class="btn btn-success btn-sm px-3">+ Add Role</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-body text-center d-flex flex-column justify-content-between p-4">
+                    <div>
+                        <h5 class="text-primary fw-bold"><i class="bi bi-people-fill me-2"></i>User & Role Management</h5>
+                        <p class="text-muted small">Create new system user accounts and assign them roles to grant module permissions.</p>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <a href="{{ route('role-assignments.index') }}" class="btn btn-outline-primary btn-sm px-3">View Users</a>
+                        <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm px-3">+ Add User</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
     </div>
 

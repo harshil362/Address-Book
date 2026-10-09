@@ -14,6 +14,9 @@ use App\Services\CityService;
 use App\Services\CountryService;
 use App\services\StateService;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -36,8 +39,17 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
-    {
-        //
-    }
+        public function boot(): void
+        {
+            Gate::before(function (User $user, string $ability) {
+
+                if ($user->hasRole('Super Admin')) {
+                    return true;
+                }
+
+                return $user->hasPermission($ability);
+            });
+        }
 }
+
+

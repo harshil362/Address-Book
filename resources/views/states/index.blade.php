@@ -25,9 +25,11 @@
 
             <h2>State List</h2>
 
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('state.create'))
             <a href="{{ route('states.create') }}" class="btn btn-primary">
                 Add State
             </a>
+            @endif
 
         </div>
 
@@ -66,6 +68,9 @@
     <script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
 
     <script>
+        const canEdit = @json(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('state.edit'));
+        const canDelete = @json(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('state.delete'));
+
         $(document).ready(function() {
 
             $('#states-table').DataTable({
@@ -105,6 +110,11 @@
                         searchable: false,
 
                         render: function(data, type, row) {
+                            if (!canEdit) {
+                                return row.status 
+                                    ? '<span class="badge bg-success">Active</span>' 
+                                    : '<span class="badge bg-secondary">Inactive</span>';
+                            }
 
                             return `
                                 <form action="/states/${row.id}" method="POST">
@@ -160,33 +170,42 @@
                         searchable: false,
 
                         render: function(data, type, row) {
+                            let actions = '';
 
-                            return `
-                                <a href="/states/${row.id}/edit"
-                                   class="btn btn-warning btn-sm">
-                                    Edit
-                                </a>
+                            if (canEdit) {
+                                actions += `
+                                    <a href="/states/${row.id}/edit"
+                                       class="btn btn-warning btn-sm me-1">
+                                        Edit
+                                    </a>
+                                `;
+                            }
 
-                                <form action="/states/${row.id}"
-                                      method="POST"
-                                      class="d-inline">
+                            if (canDelete) {
+                                actions += `
+                                    <form action="/states/${row.id}"
+                                          method="POST"
+                                          class="d-inline">
 
-                                    <input type="hidden"
-                                           name="_token"
-                                           value="{{ csrf_token() }}">
+                                        <input type="hidden"
+                                               name="_token"
+                                               value="{{ csrf_token() }}">
 
-                                    <input type="hidden"
-                                           name="_method"
-                                           value="DELETE">
+                                        <input type="hidden"
+                                               name="_method"
+                                               value="DELETE">
 
-                                    <button type="submit"
-                                            class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Are you sure you want to delete this state?')">
-                                        Delete
-                                    </button>
+                                        <button type="submit"
+                                                class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Are you sure you want to delete this state?')">
+                                            Delete
+                                        </button>
 
-                                </form>
-                            `;
+                                    </form>
+                                `;
+                            }
+
+                            return actions || '<span class="text-muted small">-</span>';
                         }
                     }
 

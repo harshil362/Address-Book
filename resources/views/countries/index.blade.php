@@ -17,9 +17,11 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>Country List</h2>
 
-            <a href="{{ route('countries.create') }}" class="btn btn-primary">
-                Add Country
-            </a>
+            @if(auth()->user()->hasPermission('country.create'))
+                <a href="{{ route('countries.create') }}" class="btn btn-primary">
+                    Add Country
+                </a>
+            @endif
         </div>
 
         <table id="countries-table" class="table table-bordered table-striped table-hover">
@@ -43,36 +45,42 @@
     <script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
 
     <script>
-        
+        const canEdit = @json(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('country.edit'));
+        const canDelete = @json(auth()->user()->hasRole('Super Admin') || auth()->user()->hasPermission('country.delete'));
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#countries-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('countries.data') }}",
 
                 columns: [{
-                        data: 'id',
-                        name: 'id'
-                    },
+                    data: 'id',
+                    name: 'id'
+                },
 
-                    {
-                        data: 'country',
-                        name: 'country'
-                    },
+                {
+                    data: 'country',
+                    name: 'country'
+                },
 
-                    {
-                        data: 'country_code',
-                        name: 'country_code'
-                    },
+                {
+                    data: 'country_code',
+                    name: 'country_code'
+                },
 
-                    {
-                        data: 'status',
-                        name: 'status',
-                        orderable: false,
-                        searchable: false,
+                {
+                    data: 'status',
+                    name: 'status',
+                    orderable: false,
+                    searchable: false,
 
-                        render: function(data, type, row) {
+                    render: function (data, type, row) {
+                        if (!canEdit) {
+                            return row.status 
+                                ? '<span class="badge bg-success">Active</span>' 
+                                : '<span class="badge bg-secondary">Inactive</span>';
+                        }
 
                         return `
                 <form action="/countries/${row.id}" method="POST">
@@ -116,45 +124,54 @@
 
                 </form>
             `;
-                        }
-                    },
-
-                    {
-                        data: null,
-                        name: 'action',
-                        orderable: false,
-                        searchable: false,
-
-                        render: function(data, type, row) {
-
-                            return `
-                <a href="/countries/${row.id}/edit"
-                   class="btn btn-warning btn-sm">
-                    Edit
-                </a>
-
-                <form action="/countries/${row.id}"
-                      method="POST"
-                      class="d-inline">
-
-                    <input type="hidden"
-                           name="_token"
-                           value="{{ csrf_token() }}">
-
-                    <input type="hidden"
-                           name="_method"
-                           value="DELETE">
-
-                    <button type="submit"
-                            class="btn btn-danger btn-sm"
-                            onclick="return confirm('Are you sure you want to delete this country?')">
-                        Delete
-                    </button>
-
-                </form>
-            `;
-                        }
                     }
+                },
+
+                {
+                    data: null,
+                    name: 'action',
+                    orderable: false,
+                    searchable: false,
+
+                    render: function (data, type, row) {
+                        let actions = '';
+
+                        if (canEdit) {
+                            actions += `
+                                <a href="/countries/${row.id}/edit"
+                                   class="btn btn-warning btn-sm me-1">
+                                    Edit
+                                </a>
+                            `;
+                        }
+
+                        if (canDelete) {
+                            actions += `
+                                <form action="/countries/${row.id}"
+                                      method="POST"
+                                      class="d-inline">
+
+                                    <input type="hidden"
+                                           name="_token"
+                                           value="{{ csrf_token() }}">
+
+                                    <input type="hidden"
+                                           name="_method"
+                                           value="DELETE">
+
+                                    <button type="submit"
+                                            class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Are you sure you want to delete this country?')">
+                                        Delete
+                                    </button>
+
+                                </form>
+                            `;
+                        }
+
+                        return actions || '<span class="text-muted small">-</span>';
+                    }
+                }
                 ]
             });
         });

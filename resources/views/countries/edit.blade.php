@@ -59,14 +59,28 @@
 
 
 
-                            <div class="d-flex justify-content-start gap-2 mt-3">
+                            {{-- <div class="d-flex justify-content-start gap-2 mt-3">
                                 <button type="submit" class="btn btn-primary">
                                     Update Country
                                 </button>
                                 <a href="{{ route('countries.index') }}" class="btn btn-secondary">
                                     Back
                                 </a>
-                            </div>
+                            </div> --}}
+
+                            <div class="d-flex justify-content-start gap-2 mt-3">
+
+    @if(auth()->user()->hasPermission('country.edit'))
+        <button type="submit" class="btn btn-primary">
+            Update Country
+        </button>
+    @endif
+
+    <a href="{{ route('countries.index') }}" class="btn btn-secondary">
+        Back
+    </a>
+
+</div>
 
                         </form>
 
